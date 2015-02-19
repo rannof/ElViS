@@ -2,3 +2,8 @@
 *pyc
 !.py
 log/
+*.o
+*_wrap.*
+*.so
+ElViSCUtils.py
+ElViSCUtils

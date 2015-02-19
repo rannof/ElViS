@@ -1,0 +1,3 @@
+change AQM server (function connectToNewAMQ in ElViS.py)
+add option to send event message as E2 module
+station waveform display

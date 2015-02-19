@@ -211,7 +211,7 @@ class AMQListener(object):
     t = datetime.datetime.utcnow()
     ts = datetime.datetime.utcnow().strftime("%Y%m%d")
     f = open(self.evntlogpath+ts+self.evntlogext,'a')
-    print >> f,t.strftime("%Y-%m-%dT%T.%.3fZ")
+    print >> f,t.isoformat()[:-3]+'Z'
     print >> f,m
     f.close()
 

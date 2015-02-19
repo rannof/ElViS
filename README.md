@@ -1,2 +1,0 @@
-# ElViS
-ElarmS Visualization System

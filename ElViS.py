@@ -432,7 +432,7 @@ class AppForm(QMainWindow):
       self.emit(SIGNAL('addPanelSignal'),m.Eid,params) # add a warning panel widget - see UIModules for panel class details
     else: # or if this is an update
       self.ax.add_line(m.point) # add a corrected location
-      self.eventsList[m.Eid][-2].point.set_mfc(None) # change color of old location
+      if len(self.eventsList[m.Eid])>2: self.eventsList[m.Eid][-2].point.set_mfc(None) # change color of old location
       self.activeWarnings[m.Eid].update(params) # update the parameters of the event
 
   def processwarnings(self):

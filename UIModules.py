@@ -340,8 +340,7 @@ class alertPanel(QMainWindow):
       if not visible:
         self.emit(SIGNAL('RemoveEID'),Eid)
         self.destroy()
-    dock.removeEid = removeEid.__get__(dock,dock.__class__)
-    dock.visibilityChanged.connect(dock.removeEid)
+    dock.closeEvent = removeEid.__get__(dock,dock.__class__)
     self.connect(dock,SIGNAL('RemoveEID'),self.removeEventID)
   def updatePanel(self,Eid,params,eta):
     if not Eid in self.eq: return

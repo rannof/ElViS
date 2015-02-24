@@ -392,14 +392,14 @@ class AppForm(QMainWindow):
     lbl = str(m) # get label
     lbl = lbl.split(')') # split to two parts
     lbl = '\n'.join((lbl[0]+')').split('|')+(lbl[1]+')').split()) # rearrange in lines.
-    m.point = mpl.lines.Line2D([m.lon],[m.lat],marker='o',ms=10,mew=3,mfc=(1.0,0,0,0.3),mec='red',label=lbl) # create a point at location
+    m.point = mpl.lines.Line2D([m.lon],[m.lat],marker='o',ms=10,mew=3,mec=(1.0,0,0,1.0),mfc=(1.0,0,0,0.5),label=lbl) # create a point at location
     if m.azimuth<0: m.azimuth+=360.0 # correct for 0-360 azimuth range
     self.lastEvent = m # set last event variable
-    self.starteventwarning(m) # start a warning or update an active one
     if not m.Eid in self.eventsList: # if this is first time we see this event ID
       self.eventsList[m.Eid] = [m] # add to event list
     else:
       self.eventsList[m.Eid].append(m) # or append to solutions record of the event
+    self.starteventwarning(m) # start a warning or update an active one
     # uncomment for a zoom to event
     #self.ax.set_ylim(m.lat-0.5,m.lat+0.5)
     #self.ax.set_xlim(m.lon-0.5,m.lon+0.5)
@@ -432,7 +432,9 @@ class AppForm(QMainWindow):
       self.emit(SIGNAL('addPanelSignal'),m.Eid,params) # add a warning panel widget - see UIModules for panel class details
     else: # or if this is an update
       self.ax.add_line(m.point) # add a corrected location
-      if len(self.eventsList[m.Eid])>2: self.eventsList[m.Eid][-2].point.set_mfc(None) # change color of old location
+      self.eventsList[m.Eid][-2].point.set_mfc('None') # change color of old location
+      self.eventsList[m.Eid][-2].point.set_mec((1,0,0,0.75))
+      self.eventsList[m.Eid][-2].point.set_mew(1)
       self.activeWarnings[m.Eid].update(params) # update the parameters of the event
 
   def processwarnings(self):

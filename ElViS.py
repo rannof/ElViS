@@ -407,6 +407,16 @@ class AppForm(QMainWindow):
     # comment for a zoom to event
     self.emit(SIGNAL('drawSignal'))
 
+  def clear_events(self):
+    'Clear all events from memory and map except for the active events'
+    for Eid in self.eventsList.keys(): # for every event
+      if not self.activeWarnings.has_key(Eid): # if not active warning
+        for m in self.eventsList[Eid]: # for every solution fount and displayed
+          m.point.remove() # remove the point from map
+        self.eventsList.pop(Eid) # remove event form event list
+        if Eid in self.alertPanel.eq: self.alertPanel.eq[Eid].widget.parent().close() # remove panel if still visible
+    self.emit(SIGNAL('drawSignal'))
+
   def starteventwarning(self,m):
     '''Add an event warning panel or update an existing one.
        also update event location on map.
@@ -453,7 +463,7 @@ class AppForm(QMainWindow):
       P = params['P'] # P wave mpl line
       now = datetime.datetime.utcnow() # get the current time
       dt =  (now-ot).total_seconds() # calculate time difference since origin time
-      if dt>180: # if we are 3 minutes after the event
+      if dt>18: # if we are 3 minutes after the event
         self.ax.lines.remove(P) # remove the P wave line
         self.ax.lines.remove(S) # remove the S wave line
         self.activeWarnings.pop(Eid) # remove event from active warnings
@@ -882,9 +892,13 @@ class AppForm(QMainWindow):
     sethome_action = self.create_action("Set &Location",
             shortcut="Shift+Ctrl+H", slot=self.setHomeLocation,
             icon='preferences-system',tip="Set your location for alerts.")
+    # clear events locations
+    clear_events_action = self.create_action("&Clear Events",
+            shortcut="Shift+Ctrl+C", slot=self.clear_events,
+            icon='edit-clear',tip="Clear Events location from the map.")
     # populate the view submenu
     self.add_actions(self.view_menu,
-            (ZoomTo_action,gohome_action,ZoomIsrael_action,None,sethome_action,None,togGrid_action))
+            (ZoomTo_action,gohome_action,ZoomIsrael_action,None,sethome_action,clear_events_action,None,togGrid_action))
     self.view_menu.addMenu(watchval_action) # add the submenu to view menu
     # Add Edit submenu
     self.edit_menu = self.menuBar().addMenu("&Event")

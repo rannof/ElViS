@@ -298,6 +298,20 @@ class messagesWidget(QTabWidget):
     self.addTab(self.evntmsg,'Events')
     self.addTab(self.sysmsg,'System')
     self.addTab(self.errmsg,'Errors')
+    # clear button
+    w = QWidget()
+    self.setCornerWidget(w)
+    self.corner = QHBoxLayout(w)
+    w.setLayout(self.corner)
+    btn = QToolButton(w)
+    btn.setText('Clear')
+    btn.setMinimumSize(50,20)
+    btn.clicked.connect(self.cleartabtxt)
+    btn.setStatusTip('Clear text in current message box')
+    btn.setToolTip('Clear text in current message box')
+    self.corner.addWidget(btn)
+  def cleartabtxt(self):
+    tab = self.currentWidget().clear()
 
 # Alert Panel Widget
 class alertPanel(QMainWindow):

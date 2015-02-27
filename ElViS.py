@@ -463,7 +463,7 @@ class AppForm(QMainWindow):
       P = params['P'] # P wave mpl line
       now = datetime.datetime.utcnow() # get the current time
       dt =  (now-ot).total_seconds() # calculate time difference since origin time
-      if dt>18: # if we are 3 minutes after the event
+      if dt>180: # if we are 3 minutes after the event
         self.ax.lines.remove(P) # remove the P wave line
         self.ax.lines.remove(S) # remove the S wave line
         self.activeWarnings.pop(Eid) # remove event from active warnings

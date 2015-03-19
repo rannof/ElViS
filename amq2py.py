@@ -176,16 +176,16 @@ class AMQListener(object):
       sys.exit("Can't find logging directory: ./log\nCreate a directory:\nmkdir log")
 
   def connectToActiveMQ(self):
-    if self._verbose: print >> sys.stderr,self.name+'Trying to Connect to AMQ server'
+    if self._verbose: print >> sys.stderr,self.name+' Trying to Connect to AMQ server'
     self.conn.start()
     if not self.conn.is_connected(): self.conn.connect(self.usr,self.passwd,wait=True)
 
   def on_connecting(self,host_and_port):
     host,port = self.conn.transport.current_host_and_port
-    if self._verbose: print >> sys.stderr,self.name+'Connected to '+':'.join([host,str(port)])
+    if self._verbose: print >> sys.stderr,self.name+' Connected to '+':'.join([host,str(port)])
 
   def on_disconnected(self):
-    if self._verbose: print >> sys.stderr,self.name+'Connection lost...'
+    if self._verbose: print >> sys.stderr,self.name+' Connection lost...'
 
   def on_error(self, headers, message):
     if self._verbose: print >> sys.stderr,self.name+' received an error %s' % message
@@ -254,11 +254,11 @@ class AMQListener(object):
     self.conn.disconnect()
 
 
-def getDMxmlmsg(Eid,mag,lat,lon,depth,delay):
+def getDMxmlmsg(Eid,mag,lat,lon,depth,delay,msgcat='test'):
   now = datetime.datetime.utcnow()
   T = (now-datetime.timedelta(0,delay)).isoformat()[:-3]
   xmlexampl ='''<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
-<event_message alg_vers="2.0.11 2014-04-08" category="live" instance="./E2@eew2" message_type="new" orig_sys="elarms" timestamp="'''+now.isoformat()[:-3]+'''Z" version="0">
+<event_message alg_vers="2.0.11 2014-04-08" category="'''+msgcat+'''" instance="./dm@eew2" message_type="new" orig_sys="elarms" timestamp="'''+now.isoformat()[:-3]+'''Z" version="0">
 
   <core_info id="'''+Eid+'''">
     <mag units="Mw">'''+str(mag)+'''</mag>
@@ -278,26 +278,28 @@ def getDMxmlmsg(Eid,mag,lat,lon,depth,delay):
   return xmlexampl
 
 
-def getE2xmlmsg():
-  T = datetime.datetime.utcnow().isoformat()[:-3]
+def getE2xmlmsg(Eid,mag,lat,lon,depth,delay,msgcat='test'):
+  now = datetime.datetime.utcnow()
+  T = (now-datetime.timedelta(0,delay)).isoformat()[:-3]
   xmlexampl ='''<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
-<event_message alg_vers="2.4.1 2014-03-04" category="live" instance="E2@ucbns1" message_type="update" orig_sys="elarms" timestamp="2014-03-29T18:30:11.316Z" version="3">
-  <core_info id="431209">
-    <mag units="Mw">2.6336</mag>
-    <mag_uncer units="Mw">0.3366</mag_uncer>
-    <lat units="deg">33.6717</lat>
-    <lat_uncer units="deg">0.1000</lat_uncer>
-    <lon units="deg">-116.7541</lon>
-    <lon_uncer units="deg">0.1000</lon_uncer>
-    <depth units="km">8.0000</depth>
-    <depth_uncer units="km">5.0000</depth_uncer>
+<event_message alg_vers="2.0.11 2014-04-08" category="'''+msgcat+'''" instance="./E2@eew2" message_type="new" orig_sys="elarms" timestamp="'''+now.isoformat()[:-3]+'''Z" version="3">
+
+  <core_info id="'''+Eid+'''">
+    <mag units="Mw">'''+str(mag)+'''</mag>
+    <mag_uncer units="Mw">0.3982</mag_uncer>
+    <lat units="deg">'''+str(lat)+'''</lat>
+    <lat_uncer units="deg">0.1283</lat_uncer>
+    <lon units="deg">'''+str(lon)+'''</lon>
+    <lon_uncer units="deg">0.1283</lon_uncer>
+    <depth units="km">'''+str(depth)+'''</depth>
+    <depth_uncer units="km">1.0000</depth_uncer>
     <orig_time units="UTC">'''+T+'''Z</orig_time>
-    <orig_time_uncer units="sec">1.6751</orig_time_uncer>
-    <likelihood>0.9256</likelihood>
+    <orig_time_uncer units="sec">2.5177</orig_time_uncer>
+    <likelihood>0.9091</likelihood>
     <num_stations>5</num_stations>
   </core_info>
-</event_message>
-'''
+
+</event_message>'''
   return xmlexampl
 
 # writer class for connecting to activeMQ

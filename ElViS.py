@@ -70,7 +70,7 @@ AMQHOST='localhost' # AMQ host
 AMQPORT=61613 # AMQ port
 watchingGMValue='amax' # station values to monitor
 GRIDON=False # grid on or off [True | False]
-
+VERBOSE=False # printout message
 
 # general setup
 topics = {'gmpeak':GMPEAKtopic, # peak parameters AMQ topic
@@ -197,7 +197,7 @@ class AppForm(QMainWindow):
     AMQ.AMQListener.processMessages = self.processAMQmsg # what to do with messages
     AMQ.AMQListener.on_connecting = self.on_connecting # what to do on connection
     AMQ.AMQListener.on_disconnected = self.on_disconnected # what to do on disconnection
-    self.amq = AMQ.AMQListener(usr=AMQUSER,passwd=AMQPASSWD,host_and_ports=[(AMQHOST,AMQPORT)],name='ActiveMQ',ID=1,log=True,verbose=False) # create AMQ listener
+    self.amq = AMQ.AMQListener(usr=AMQUSER,passwd=AMQPASSWD,host_and_ports=[(AMQHOST,AMQPORT)],name='ActiveMQ',ID=1,log=True,verbose=VERBOSE) # create AMQ listener
     self.connectToAMQ() # connect listener to server
     self.subscribeToAMQ(topics) # subscribe listener to topics
     self.start_timers() # start QT Timers to process triggers, station values (colors) and EQ warnings.
@@ -491,7 +491,7 @@ class AppForm(QMainWindow):
         if (ts-self.activeStationsList[station]).total_seconds()>60: # if last message from station is over a minute ago
           redraw = True # don't forget to update at the end
           station.set_markerfacecolor('k') # turn station color to black (not active)
-          self.emit(SIGNAL('errMsgSignal'),'Station %s i inactive for the last 60 sec.' % station.get_label().split()[0],True) # send an error message
+          self.emit(SIGNAL('errMsgSignal'),'Station %s is inactive for the last 60 sec.' % station.get_label().split()[0],True) # send an error message
           self.activeStationsList.pop(station) # remove form active station list
     if redraw: self.emit(SIGNAL('drawSignal')) # update map if needed.
 

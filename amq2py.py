@@ -62,8 +62,10 @@ class TrigParam(object):
     # see data structure in TrigParams.h
     self.headertype = dtype([('type', 'S1'), ('source', 'S1'), ('id', '>i4'), ('npackets', '>i4')])
     self.trigvaluestype = dtype([('tauP','>f4'),('tauPsnr','>f4'),('ttime','>i4'),('d','>f4'),('dsnr','>f4'),('dtime','>i4'),('v','>f4'),('vsnr','>f4'),('vtime','>i4'),('a','>f4'),('asnr','>f4'),('atime','>i4')])
-    self.rawtype = dtype([('sta', 'S5'), ('chn', 'S4'), ('net', 'S3'), ('loc', 'S3'), ('lat', '>f8'), ('lon', '>f8'), ('sec', '>i4'),('msec','>i4'), ('latency', '>f4'),('trigvalues',self.trigvaluestype,10)])
-    self.datatype = dtype([('sta', 'S5'), ('chn', 'S4'), ('net', 'S3'), ('loc', 'S3'), ('lat', '>f8'), ('lon', '>f8'), ('ts', datetime.datetime), ('latency', '>f4'),('trigvalues',self.trigvaluestype,10)])
+    self.rawtype = dtype([('sta', 'S5'), ('chn', 'S4'), ('net', 'S3'), ('loc', 'S3'), ('lat', '>f8'), ('lon', '>f8'), ('sec', '>i4'),('msec','>i4'), ('packlength', '>i4')\
+    ,('samplerate', '>f4'),('toffset', '>f4'),('arrtime', '>f8'),('protime', '>f4'),('fndtime', '>f4'),('quetime', '>f4'),('sndtime', '>f4'),('trigvalues',self.trigvaluestype,10)])
+    self.datatype = dtype([('sta', 'S5'), ('chn', 'S4'), ('net', 'S3'), ('loc', 'S3'), ('lat', '>f8'), ('lon', '>f8'), ('ts', datetime.datetime),('packlength', '>i4')\
+    ,('samplerate', '>f4'),('toffset', '>f4'),('arrtime', '>f8'),('protime', '>f4'),('fndtime', '>f4'),('quetime', '>f4'),('sndtime', '>f4') ,('trigvalues',self.trigvaluestype,10)])
     self.header = array([],dtype=self.headertype)
     self.packets= array([],dtype=self.datatype)
     if m: self.decode(m)

@@ -38,11 +38,11 @@ class zoomLineEdit(QLineEdit):
     validator = QDoubleValidator()
     validator.setRange(minval,maxval,7)
     self.setValidator(validator)
-    self.textChanged.connect(self.validate)
+    #self.editingFinished.connect(self.validate)
     self.setToolTip('%d <= Value >= %d'%(minval,maxval))
-  def validate(self):
-    if not self.validator().validate(self.text(),2)==(2,2):
-      self.backspace()
+  #def validate(self):
+  #  if not self.validator().validate(self.text(),2)==(2,2):
+  #    self.backspace()
 
 # Zoom to map area dialog
 class zoomForm(QDialog):
@@ -91,13 +91,13 @@ class zoomForm(QDialog):
   def validate(self):
     w,e,s,n = self.getLims()
     if w>=e and s>=n:
-      QMessageBox.warning(self,'ElViS - Erorr','West value should be lower than East value.\nSouth value should be lower than North value.')
+      QMessageBox.warning(self,'ElViS - Error','West value should be lower than East value.\nSouth value should be lower than North value.')
       return 0
     elif w>=e:
-      QMessageBox.warning(self,'ElViS - Erorr','West value should be lower than East value.')
+      QMessageBox.warning(self,'ElViS - Error','West value should be lower than East value.')
       return 0
     elif s>=n:
-      QMessageBox.warning(self,'ElViS - Erorr','South value should be lower than North value.')
+      QMessageBox.warning(self,'ElViS - Error','South value should be lower than North value.')
       return 0
     else:
       return 1

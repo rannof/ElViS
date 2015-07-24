@@ -37,7 +37,7 @@ class GMPeak(object):
   def __init__(self,m=None):
     self.type='G'
     # see data structure in GMPeak.h
-    self.headertype = dtype([('type', 'S1'), ('source', 'S1'), ('id', '>i4'), ('npackets', '>i4')])
+    self.headertype = dtype([('type', 'S1'), ('version','>i4'),('source', 'S20'), ('id', '>i4'), ('npackets', '>i4')])
     self.datatype = dtype([('sta', 'S5'), ('chn', 'S4'), ('net', 'S3'), ('loc', 'S3'), ('lat', '>f8'), ('lon', '>f8'), ('ts', '>f8'), ('nsamps', '>i4'), ('samprate', '>f4'), ('dmax', '>f4'), ('vmax', '>f4'), ('amax', '>f4'), ('dindex', '>i4'), ('vindex', '>i4'), ('aindex', '>i4'), ('latency', '>f4')])
     self.header = array([],dtype=self.headertype)
     self.packets= array([],dtype=self.datatype)
@@ -60,7 +60,7 @@ class TrigParam(object):
   def __init__(self,m=None):
     self.type='P'
     # see data structure in TrigParams.h
-    self.headertype = dtype([('type', 'S1'), ('source', 'S1'), ('id', '>i4'), ('npackets', '>i4')])
+    self.headertype = dtype([('type', 'S1'),('version','>i4'), ('source', 'S20'), ('id', '>i4'), ('npackets', '>i4')])
     self.trigvaluestype = dtype([('tauP','>f4'),('tauPsnr','>f4'),('ttime','>i4'),('d','>f4'),('dsnr','>f4'),('dtime','>i4'),('v','>f4'),('vsnr','>f4'),('vtime','>i4'),('a','>f4'),('asnr','>f4'),('atime','>i4')])
     self.rawtype = dtype([('sta', 'S5'), ('chn', 'S4'), ('net', 'S3'), ('loc', 'S3'), ('lat', '>f8'), ('lon', '>f8'), ('sec', '>i4'),('msec','>i4'), ('packlength', '>i4')\
     ,('samplerate', '>f4'),('toffset', '>f4'),('arrtime', '>f8'),('protime', '>f4'),('fndtime', '>f4'),('quetime', '>f4'),('sndtime', '>f4'),('trigvalues',self.trigvaluestype,10)])
@@ -81,7 +81,6 @@ class TrigParam(object):
     return '\n'.join(['%s | P: %s %s %s %s %f %f %f'% tuple([p['ts'].isoformat()]+[p[i] for i in range(6)]+[p[7]]) +\
       '\n'+'\n'.join(['\t'+' %10.6f'*len(v) % tuple(v) for v in p['trigvalues']]) for p in self.packets])
 
-
 class Trigger(object):
   def __init__(self,m=None):
     self.type='T'
@@ -92,7 +91,7 @@ class Trigger(object):
     self.lat=0.0
     self.lon=0.0
     self.ts=datetime.datetime.min
-    self.rawtype = dtype([('type', 'S1'), ('source', 'S1'), ('id', '>i4'), ('sta', 'S5'), ('chn', 'S4'), ('net', 'S3'), ('loc', 'S3'), ('lat', '>f8'), ('lon', '>f8'), ('sec', '>i4'), ('msec', '>i4')])
+    self.rawtype = dtype([('type', 'S1'),('version','>i4'), ('source', 'S20'), ('id', '>i4'), ('sta', 'S5'), ('chn', 'S4'), ('net', 'S3'), ('loc', 'S3'), ('lat', '>f8'), ('lon', '>f8'), ('sec', '>i4'), ('msec', '>i4')])
     self.datatype = dtype([('sta', 'S5'), ('chn', 'S4'), ('net', 'S3'), ('loc', 'S3'), ('lat', '>f8'), ('lon', '>f8'), ('ts', datetime.datetime)])
     if m: self.decode(m)
   def decode(self,m):
@@ -112,6 +111,17 @@ class Trigger(object):
     self.decode(m)
   def __str__(self):
     return self.ts.isoformat()+' | T: '+' '.join(['',self.net,self.sta,self.loc,self.chn,str(self.lat),str(self.lon)])
+
+class RawData(object):
+  def __init__(self,m=None):
+    self.type='D'
+    self.headertype = dtype([('type', 'S1'),('version','>i4'), ('source', 'S20'), ('id', '>i4'), ('npackets', '>i4')])
+    if m: self.decode(m)
+  def decode(self,m):
+    self.raw=m
+    pass
+  def __str__(self):
+    return 'Data packets are not supported at this version'
 
 class algXML(object):
   def __init__(self,m=None):
@@ -166,6 +176,7 @@ class AMQListener(object):
                        'T':Trigger,
                        'G':GMPeak,
                        'P':TrigParam,
+                       'D':RawData,
                        '<':algXML
                       }
     self.triglogpath='log/triggers_'

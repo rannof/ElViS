@@ -53,6 +53,7 @@ GMPEAKtopic='/topic/eew.alg.elarms.gmpeak.data' # peak parameters AMQ topic
 TRIGGERtopic='/topic/eew.alg.elarms.trigger.data' # trigger and trigger parameters AMQ topic
 ALARMStopic='/topic/eew.alg.elarms.data' # E2 alarms AMQ topic
 DMtopic='/topic/eew.sys.dm.data' # DM event AMQ topic
+EDATAtopic='/topic/eew.alg.elarms.event.data' # event raw data topic
 STATIONS_FILE = '/home/sysop/EEWS/elarms/E2/stations.cfg' # file with stations ([net] [sta] [lat] [lon])
 HomeLat=31.7722064 # latitude of "home" location
 HomeLon=35.1958522 # longitude of "home" location
@@ -76,7 +77,8 @@ VERBOSE=False # printout message
 topics = {'gmpeak':GMPEAKtopic, # peak parameters AMQ topic
           'trigger':TRIGGERtopic, # trigger and trigger parameters AMQ topic
           'alarms':ALARMStopic, # E2 alarms AMQ topic
-          'dm':DMtopic} # DM event AMQ topic
+          'dm':DMtopic, # DM event AMQ topic
+          'waveforms' : EDATAtopic} # Event waveforms raw data topic
 acmap = mpl.colors.LinearSegmentedColormap.from_list('acc',['blue','cyan','yellow','red']) # create a colormap for accelertion
 acmap(np.arange(256)) # initialize the colormap
 cm.register_cmap(cmap=acmap)

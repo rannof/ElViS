@@ -18,12 +18,13 @@
 #*    along with this program.  If not, see <http://www.gnu.org/licenses/>.        *
 #***********************************************************************************/
 
-import sys,os
+import sys,os,threading
 import stomp,datetime,zlib
 from numpy import frombuffer,dtype,array
 from xml.dom import minidom
 import logging
 logging.basicConfig()
+msglock = threading.Lock()
 
 def ID(a):
   'get network,station,location,channal from a Structured Array.'
@@ -63,9 +64,9 @@ class TrigParam(object):
     self.headertype = dtype([('type', 'S1'),('version','>i4'), ('source', 'S20'), ('id', '>i4'), ('npackets', '>i4')])
     self.trigvaluestype = dtype([('tauP','>f4'),('tauPsnr','>f4'),('ttime','>i4'),('d','>f4'),('dsnr','>f4'),('dtime','>i4'),('v','>f4'),('vsnr','>f4'),('vtime','>i4'),('a','>f4'),('asnr','>f4'),('atime','>i4')])
     self.rawtype = dtype([('sta', 'S5'), ('chn', 'S4'), ('net', 'S3'), ('loc', 'S3'), ('lat', '>f8'), ('lon', '>f8'), ('sec', '>i4'),('msec','>i4'), ('packlength', '>i4')\
-    ,('samplerate', '>f4'),('toffset', '>f4'),('arrtime', '>f8'),('protime', '>f4'),('fndtime', '>f4'),('quetime', '>f4'),('sndtime', '>f4'),('trigvalues',self.trigvaluestype,10)])
+    ,('recent_sample', '>i4'),('samplerate', '>f4'),('toffset', '>f4'),('arrtime', '>f8'),('protime', '>f4'),('fndtime', '>f4'),('quetime', '>f4'),('sndtime', '>f4'),('trigvalues',self.trigvaluestype,10)])
     self.datatype = dtype([('sta', 'S5'), ('chn', 'S4'), ('net', 'S3'), ('loc', 'S3'), ('lat', '>f8'), ('lon', '>f8'), ('ts', datetime.datetime),('packlength', '>i4')\
-    ,('samplerate', '>f4'),('toffset', '>f4'),('arrtime', '>f8'),('protime', '>f4'),('fndtime', '>f4'),('quetime', '>f4'),('sndtime', '>f4') ,('trigvalues',self.trigvaluestype,10)])
+    ,('recent_sample', '>i4'),('samplerate', '>f4'),('toffset', '>f4'),('arrtime', '>f8'),('protime', '>f4'),('fndtime', '>f4'),('quetime', '>f4'),('sndtime', '>f4') ,('trigvalues',self.trigvaluestype,10)])
     self.header = array([],dtype=self.headertype)
     self.packets= array([],dtype=self.datatype)
     if m: self.decode(m)
@@ -229,6 +230,7 @@ class AMQListener(object):
     f.close()
 
   def _processMessages(self,lastmessage):
+    msglock.acquire()
     m = lastmessage
     if m[0] in self._procfuncs:
       try:
@@ -244,6 +246,7 @@ class AMQListener(object):
       self.savebin(m)
     if m[0] in ['<'] and self.logit:
       self.savetxt(m)
+    msglock.release()
 
   def subscribeToActiveMQ(self,destination=None,ID=None,usr=None,passwd=None,ack='auto'):
     if not destination: destination = self.subscribeTo

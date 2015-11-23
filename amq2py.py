@@ -63,10 +63,13 @@ class TrigParam(object):
     # see data structure in TrigParams.h
     self.headertype = dtype([('type', 'S1'),('version','>i4'), ('source', 'S20'), ('id', '>i4'), ('npackets', '>i4')])
     self.trigvaluestype = dtype([('tauP','>f4'),('tauPsnr','>f4'),('ttime','>i4'),('d','>f4'),('dsnr','>f4'),('dtime','>i4'),('v','>f4'),('vsnr','>f4'),('vtime','>i4'),('a','>f4'),('asnr','>f4'),('atime','>i4')])
-    self.rawtype = dtype([('sta', 'S5'), ('chn', 'S4'), ('net', 'S3'), ('loc', 'S3'), ('lat', '>f8'), ('lon', '>f8'), ('sec', '>i4'),('msec','>i4'), ('packlength', '>i4')\
-    ,('recent_sample', '>i4'),('samplerate', '>f4'),('toffset', '>f4'),('arrtime', '>f8'),('protime', '>f4'),('fndtime', '>f4'),('quetime', '>f4'),('sndtime', '>f4'),('trigvalues',self.trigvaluestype,10)])
-    self.datatype = dtype([('sta', 'S5'), ('chn', 'S4'), ('net', 'S3'), ('loc', 'S3'), ('lat', '>f8'), ('lon', '>f8'), ('ts', datetime.datetime),('packlength', '>i4')\
-    ,('recent_sample', '>i4'),('samplerate', '>f4'),('toffset', '>f4'),('arrtime', '>f8'),('protime', '>f4'),('fndtime', '>f4'),('quetime', '>f4'),('sndtime', '>f4') ,('trigvalues',self.trigvaluestype,10)])
+    self.rawtype = dtype([('sta', 'S5'), ('chn', 'S4'), ('net', 'S3'), ('loc', 'S3'), ('lat', '>f8'), ('lon', '>f8')\
+                           ,('sec', '>i4'),('msec','>i4'), ('packlength', '>i4')\
+                           ,('recent_sample', '>i4'),('samplerate', '>f4'),('toffset', '>f4'),('arrtime', '>f8')\
+                           ,('protime', '>f4'),('fndtime', '>f4'),('quetime', '>f4'),('sndtime', '>f4')\
+                           ,('trigvalues',self.trigvaluestype,10)])
+    self.datatype = dtype([('sta', 'S5'), ('chn', 'S4'), ('net', 'S3'), ('loc', 'S3'), ('lat', '>f8'), ('lon', '>f8'), ('ts', datetime.datetime),('msec','>i4'),('packlength', '>i4')\
+                           ,('recent_sample', '>i4'),('samplerate', '>f4'),('toffset', '>f4'),('arrtime', '>f8'),('protime', '>f4'),('fndtime', '>f4'),('quetime', '>f4'),('sndtime', '>f4') ,('trigvalues',self.trigvaluestype,10)])
     self.header = array([],dtype=self.headertype)
     self.packets= array([],dtype=self.datatype)
     if m: self.decode(m)
@@ -232,20 +235,23 @@ class AMQListener(object):
   def _processMessages(self,lastmessage):
     msglock.acquire()
     m = lastmessage
+    if m[0] in ['T','P'] and self.logit:
+      self.savebin(m)
+    if m[0] in ['<'] and self.logit:
+      self.savetxt(m)
     if m[0] in self._procfuncs:
       try:
         self._lastMessage = self._procfuncs[m[0]](m)
         if self._verbose: print >> sys.stdout,self._lastMessage
       except Exception,msg:
         if self._verbose: print >> sys.stderr,self.name+' Unknown message %s \n*************\n%s\n*************\n'% (m,msg)
+        msglock.release()
         return
     else:
       if self._verbose: print >> sys.stderr,self.name+' Unknown message %s'% m
+      msglock.release()
+      return
     self.processMessages()
-    if m[0] in ['T','P'] and self.logit:
-      self.savebin(m)
-    if m[0] in ['<'] and self.logit:
-      self.savetxt(m)
     msglock.release()
 
   def subscribeToActiveMQ(self,destination=None,ID=None,usr=None,passwd=None,ack='auto'):

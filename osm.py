@@ -46,7 +46,13 @@ class OSM(object):
   def tile2image(self,datafile,limits=[latmin,latmax,lonmin,lonmax]):
     'add tile to axes images'
     y0,y1,x0,x1=limits # get tile extent
-    data = scipy.misc.fromimage(Image.open(datafile)) # read tile image and convert to 2D array
+    try:
+      data = scipy.misc.fromimage(Image.open(datafile)) # read tile image and convert to 2D array
+    except IOError:
+      print "Bad image file: %s. Please remove the file for next time."%datafile
+      data = np.zeros((256,256,3)) # use black image with red X.
+      data[where(np.identity(256,dtype=uint8))] = [1,0,0]
+      data1[where(np.identity(256,dtype=uint8)[::-1])] = [1,0,0]
     im = matplotlib.image.AxesImage(self.ax) # create an image object
     im.set_data(data) # set the data to image
     im._extent = [x0,x1,y0,y1] # set image extents

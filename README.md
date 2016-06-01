@@ -3,7 +3,6 @@
 Elarms is an Earthquake Early Warning System (EEWS), developed at Berkeley Seismological Lab (http://seismo.berkeley.edu/).
 This tool is aimed for visually monitoring the ElarmS system.<br>
 Created by Ran Novitsky Nof (ran.rnof.info), 2014.  
-![screenshot](screentshot.jpg?raw=true Screenshot)
 #### DEPENDENCIES:
 -  swig - http://swig.org
 
@@ -34,7 +33,11 @@ positional arguments:
 
 optional arguments:  
   -h, --help  show this help message and exit
-</pre>
+</pre>  
+
+![screenshot](screenshot.jpg)  
+
+
 #### LICENSE:
   ElViS is free software: you can redistribute it and/or modify
   it under the terms of the GNU Lesser General Public License as published by

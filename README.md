@@ -2,8 +2,8 @@
 ### An application for monitoring ElarmS system
 Elarms is an Earthquake Early Warning System (EEWS), developed at Berkeley Seismological Lab (http://seismo.berkeley.edu/).
 This tool is aimed for visually monitoring the ElarmS system.<br>
-Created by Ran Novitsky Nof (ran.rnof.info), 2014.
-
+Created by Ran Novitsky Nof (ran.rnof.info), 2014.  
+![screenshot](screentshot.jpg)
 #### DEPENDENCIES:
 -  swig - http://swig.org
 

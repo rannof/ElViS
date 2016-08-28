@@ -36,7 +36,7 @@ class OSM(object):
   lonmin = -180.0
   maxlevel=17
   maxtilecash=500
-  def __init__(self,ax,tileurl="http://otile1.mqcdn.com/tiles/1.0.0/osm",tilearchive=''):
+  def __init__(self,ax,tileurl="http://a.tile.openstreetmap.org",tilearchive=''):
     # constants and defaults
     self.ax = ax # where to plot tiles
     self.http = Http()
@@ -51,8 +51,8 @@ class OSM(object):
     except IOError:
       print "Bad image file: %s. Please remove the file for next time."%datafile
       data = np.zeros((256,256,3)) # use black image with red X.
-      data[where(np.identity(256,dtype=uint8))] = [1,0,0]
-      data1[where(np.identity(256,dtype=uint8)[::-1])] = [1,0,0]
+      data[np.where(np.identity(256,dtype=np.uint8))] = [1,0,0]
+      data1[np.where(np.identity(256,dtype=np.uint8)[::-1])] = [1,0,0]
     im = matplotlib.image.AxesImage(self.ax) # create an image object
     im.set_data(data) # set the data to image
     im._extent = [x0,x1,y0,y1] # set image extents

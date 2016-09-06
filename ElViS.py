@@ -61,7 +61,7 @@ HomeSize=6 # size of "home" marker
 HomeLabel='Home' # name of "Home"
 HomeColor='red' # color of "home" marker
 HomeMarker='s' # style of "home" marker
-OSMTILEURL="http://otile1.mqcdn.com/tiles/1.0.0/osm" # where to read map tiles from
+OSMTILEURL="http://a.tile.openstreetmap.org" # where to read map tiles from
 OSMTILEARCHIVE="tiles"
 # AMQ defaults
 AMQUSER='monitor' # user for monitoring

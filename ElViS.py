@@ -63,6 +63,7 @@ HomeColor='red' # color of "home" marker
 HomeMarker='s' # style of "home" marker
 OSMTILEURL="http://a.tile.openstreetmap.org" # where to read map tiles from
 OSMTILEARCHIVE="tiles"
+OSMTILEPAT = "{Z}/{X}/{Y}.png"
 # AMQ defaults
 AMQUSER='monitor' # user for monitoring
 AMQPASSWD='monitor' # password for monitoring
@@ -179,7 +180,7 @@ class AppForm(QMainWindow):
     self.alertPanel = alertPanel(self) # prepare an alert panel.
     self.create_message_widget() # Add messages widget.
     self.create_tooltip_widget()
-    self.osm = osm(self.ax,OSMTILEURL,OSMTILEARCHIVE) # add open street map generator
+    self.osm = osm(self.ax,OSMTILEURL,OSMTILEPAT,OSMTILEARCHIVE) # add open street map generator
     splash.showMessage('Loading stations...',Qt.AlignCenter)
     QApplication.processEvents()
     self.stations = []

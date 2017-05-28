@@ -36,11 +36,12 @@ class OSM(object):
   lonmin = -180.0
   maxlevel=17
   maxtilecash=500
-  def __init__(self,ax,tileurl="http://a.tile.openstreetmap.org",tilearchive=''):
+  def __init__(self,ax,tileurl="http://a.tile.openstreetmap.org/",tilepat="{Z}/{X}/{Y}.png",tilearchive=''):
     # constants and defaults
     self.ax = ax # where to plot tiles
     self.http = Http()
     self.tileurl = tileurl
+    self.tilepat = tilepat
     if not os.path.exists(tilearchive): tilearchive='' # make sure tile archive directory exists
     self.tilearchive = tilearchive
   def tile2image(self,datafile,limits=[latmin,latmax,lonmin,lonmax]):
@@ -52,7 +53,7 @@ class OSM(object):
       print "Bad image file: %s. Please remove the file for next time."%datafile
       data = np.zeros((256,256,3)) # use black image with red X.
       data[np.where(np.identity(256,dtype=np.uint8))] = [1,0,0]
-      data1[np.where(np.identity(256,dtype=np.uint8)[::-1])] = [1,0,0]
+      data[np.where(np.identity(256,dtype=np.uint8)[::-1])] = [1,0,0]
     im = matplotlib.image.AxesImage(self.ax) # create an image object
     im.set_data(data) # set the data to image
     im._extent = [x0,x1,y0,y1] # set image extents
@@ -107,14 +108,15 @@ class OSM(object):
     return np.append(self.tiley2lims(tiley,zoom),self.tilex2lims(tilex,zoom))
   def tile2path(self,tilex,tiley,zoom):
     'get tile path'
-    if not os.path.exists("%s/%d/%d/%d.png"%(self.tilearchive,zoom,tilex,tiley)):
-      return "%s/%d/%d/%d.png"%(self.tileurl,zoom,tilex,tiley) # download if not archived
+    if not os.path.exists(os.sep.join([self.tilearchive,self.tilepat.format(Z=zoom,X=tilex,Y=tiley)])):
+      return self.tileurl+self.tilepat.format(Z=zoom,X=tilex,Y=tiley) # download if not archived
     else:
-      return "%s/%d/%d/%d.png"%(self.tilearchive,zoom,tilex,tiley) # get form archive
+      return os.sep.join([self.tilearchive,self.tilepat.format(Z=zoom,X=tilex,Y=tiley)]) # get form archive
   def tilepath2zoomxy(self,tile):
     'convert tile path to lat-lon indices and zoom'
-    zoom,tilex,tiley = os.path.splitext(tile)[0].split('/')[-3:]
-    return int(tilex),int(tiley),int(zoom)
+    tileorder = os.path.splitext(self.tilepat.replace('{','').replace('}',''))[0].split('/')[-3:]
+    tilexyz = dict(zip(tileorder,os.path.splitext(tile)[0].split(os.sep)[-3:]))
+    return int(tilexyz['X']),int(tilexyz['Y']),int(tilexyz['Z'])
   def gettiles(self,lonmin,lonmax,latmin,latmax):
     'get a list of tiles for limits. make sure at least two tiles cover the range'
     latmin,latmax = self.checklatrange(latmin,latmax) # correct lat limits to tiles
@@ -147,14 +149,14 @@ class OSM(object):
     self.currentimages = []
     # read or download tiles and plot them to axes
     for t in tiles:
-      tID = t.replace(self.tileurl,'').replace(self.tilearchive,'')
+      tID = t.replace(self.tileurl,'').replace(self.tilearchive,'').replace('/',os.sep)
       if not tID in self.cashedtiles: # if tiles are not already in cash
         if t.startswith('http'): # if we need to download
           datafile = StringIO(self.http.request(t)[1]) # download tile image to stream
           if self.tilearchive: # archive tile if we set the archive
             d = datafile.read() # read the downloaded data from stream
             datafile.seek(0) # rewind stream
-            archivedir,fname = os.path.split(t.replace(self.tileurl,self.tilearchive)) # get archive path of tile
+            archivedir,fname = os.path.split(os.sep.join([self.tilearchive,tID])) # get archive path of tile
             if not os.path.exists(archivedir): # make sure archive directory exists
               os.makedirs(archivedir) # or create it
             with open(os.sep.join([archivedir,fname]),'w') as f:

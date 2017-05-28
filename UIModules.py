@@ -26,7 +26,7 @@
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
-import datetime,matplotlib
+import datetime,matplotlib,os
 
 # zoomto form line class
 class zoomLineEdit(QLineEdit):
@@ -360,7 +360,12 @@ class alertPanel(QMainWindow):
     if not Eid in self.eq: return
     eq = self.eq[Eid]
     [setattr(eq,k,v) for k,v in params.items()]
-    if eq.eta0==-1: eq.eta0=eta
+    if eq.eta0==-1: 
+      eq.eta0=eta
+      try:
+        os.system("espeak -s 150 -p 30 'Earthquake. M, %d, in %0.1f seconds. Dorp, cover, and, hold on.' &"%(eq.mag,eta))
+      except:
+        pass
     eq.eta = eta
     eq.widget.clear()
     eq.widget.setText(self.formatEQAlert(eq))

@@ -54,7 +54,7 @@ class OSM(object):
       data = np.zeros((256,256,3)) # use black image with red X.
       data[np.where(np.identity(256,dtype=np.uint8))] = [1,0,0]
       data[np.where(np.identity(256,dtype=np.uint8)[::-1])] = [1,0,0]
-    im = matplotlib.image.AxesImage(self.ax) # create an image object
+    im = matplotlib.image.AxesImage(self.ax,transform=self.ax.transData,interpolation='bicubic') # create an image object
     im.set_data(data) # set the data to image
     im._extent = [x0,x1,y0,y1] # set image extents
     return im

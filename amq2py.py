@@ -20,7 +20,7 @@
 
 import sys,os,threading
 import stomp,datetime,zlib
-from numpy import frombuffer,dtype,array
+from numpy import frombuffer,dtype,array, zeros
 from xml.dom import minidom
 import logging
 logging.basicConfig()
@@ -68,8 +68,11 @@ class TrigParam(object):
                            ,('recent_sample', '>i4'),('samplerate', '>f4'),('toffset', '>f4'),('arrtime', '>f8')\
                            ,('protime', '>f4'),('fndtime', '>f4'),('quetime', '>f4'),('sndtime', '>f4')\
                            ,('trigvalues',self.trigvaluestype,10)])
-    self.datatype = dtype([('sta', 'S5'), ('chn', 'S4'), ('net', 'S3'), ('loc', 'S3'), ('lat', '>f8'), ('lon', '>f8'), ('ts', datetime.datetime),('msec','>i4'),('packlength', '>i4')\
-                           ,('recent_sample', '>i4'),('samplerate', '>f4'),('toffset', '>f4'),('arrtime', '>f8'),('protime', '>f4'),('fndtime', '>f4'),('quetime', '>f4'),('sndtime', '>f4') ,('trigvalues',self.trigvaluestype,10)])
+    self.datatype = dtype([('sta', 'S5'), ('chn', 'S4'), ('net', 'S3'), ('loc', 'S3'), ('lat', '>f8'), ('lon', '>f8')\
+						   ,('ts', datetime.datetime),('msec','>i4'),('packlength', '>i4')\
+                           ,('recent_sample', '>i4'),('samplerate', '>f4'),('toffset', '>f4'),('arrtime', '>f8')\
+                           ,('protime', '>f4'),('fndtime', '>f4'),('quetime', '>f4'),('sndtime', '>f4')\
+                           ,('trigvalues',self.trigvaluestype,10)])
     self.header = array([],dtype=self.headertype)
     self.packets= array([],dtype=self.datatype)
     if m: self.decode(m)
@@ -79,8 +82,10 @@ class TrigParam(object):
     data = zlib.decompress(m[self.headertype.itemsize+1:])
     self.header = header
     packets = frombuffer(data,self.rawtype,header['npackets'])
-    self.packets = packets.astype(self.datatype)
-    self.packets['ts'] = [datetime.datetime.utcfromtimestamp(float('.'.join([str(p['sec']),str(p['msec'])]))) for p in packets]
+    names = ' '.join(a.dtype.names).replace('sec','ts').split()
+    packets.dtype.names = names
+    self.packets = packets
+    self.packets['ts'] = [datetime.datetime.utcfromtimestamp(float('.'.join([str(p['ts']),str(p['msec'])]))) for p in packets]
   def __str__(self):
     return '\n'.join(['%s | P: %s %s %s %s %f %f %f'% tuple([p['ts'].isoformat()]+[p[i] for i in range(6)]+[p[7]]) +\
       '\n'+'\n'.join(['\t'+' %10.6f'*len(v) % tuple(v) for v in p['trigvalues']]) for p in self.packets])
@@ -102,7 +107,10 @@ class Trigger(object):
     self.raw=m
     data = frombuffer(m,self.rawtype,1)
     ts = float('.'.join([data['sec'].astype(str)[0], data['msec'].astype(str)[0]]))
-    self.packets = data.astype(self.datatype)
+    self.packets = array(zeros(len(data)),dtype=self.datatype)
+    for k in self.datatype.names:
+      if k in self.rawtype.names:
+        self.packets[k] = data[k] 
     self.packets['ts'] = datetime.datetime.utcfromtimestamp(ts)
     self.sta= self.packets['sta'][0]
     self.chn= self.packets['chn'][0]

@@ -82,9 +82,9 @@ class TrigParam(object):
     data = zlib.decompress(m[self.headertype.itemsize+1:])
     self.header = header
     packets = frombuffer(data,self.rawtype,header['npackets'])
-    names = ' '.join(a.dtype.names).replace('sec','ts').split()
+    names = ' '.join(packets.dtype.names).replace('sec','ts',1).split()
     packets.dtype.names = names
-    self.packets = packets
+    self.packets = packets.astype(self.datatype)
     self.packets['ts'] = [datetime.datetime.utcfromtimestamp(float('.'.join([str(p['ts']),str(p['msec'])]))) for p in packets]
   def __str__(self):
     return '\n'.join(['%s | P: %s %s %s %s %f %f %f'% tuple([p['ts'].isoformat()]+[p[i] for i in range(6)]+[p[7]]) +\

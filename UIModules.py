@@ -362,10 +362,6 @@ class alertPanel(QMainWindow):
     [setattr(eq,k,v) for k,v in params.items()]
     if eq.eta0==-1: 
       eq.eta0=eta
-      try:
-        os.system("espeak -s 150 -p 30 'Earthquake. M, %d, in %0.1f seconds. Dorp, cover, and, hold on.' &"%(eq.mag,eta))
-      except:
-        pass
     eq.eta = eta
     eq.widget.clear()
     eq.widget.setText(self.formatEQAlert(eq))

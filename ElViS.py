@@ -752,7 +752,7 @@ class AppForm(QMainWindow):
     try:
       stations = np.loadtxt(fileurl,dtype=np.dtype([('net','|S2'),('sta','|S5'),('lat',float),('lon',float)]),usecols=xrange(4)) # read file
     except Exception,msg:
-      self.message("Can't load stations from %s: \n"%(fileurl)+msg.message,'ElViS - Error loading stations') # show a message window if failed
+#      self.message("Can't load stations from %s: \n"%(fileurl)+msg.message,'ElViS - Error loading stations') # show a message window if failed
       return
     ids = ['.'.join([n,s]) for n,s in zip(stations['net'],stations['sta'])] # get stations ids as net.sta
     stations = [mpl.lines.Line2D([stations['lon'][i]],[stations['lat'][i]],marker='^',c='k',ms=6,label=ids[i]) for i in range(len(ids))] # create lines (a marker) for each station
@@ -1073,5 +1073,10 @@ if __name__=="__main__":
   args = parser.parse_args(sys.argv[1:])
   if args.cfgfile:
     exec(args.cfgfile) # execute configuration file
+  topics = {'gmpeak':GMPEAKtopic, # peak parameters AMQ topic
+          'trigger':TRIGGERtopic, # trigger and trigger parameters AMQ topic
+          'alarms':ALARMStopic, # E2 alarms AMQ topic
+          'dm':DMtopic, # DM event AMQ topic
+          'waveforms' : EDATAtopic} # Event waveforms raw data topic
   mpl.rcParams['font.size']=float(FONTSIZE)
   main(args)

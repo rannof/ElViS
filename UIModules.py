@@ -83,10 +83,10 @@ class zoomForm(QDialog):
     self.S.setText(str(s))
     self.N.setText(str(n))
   def getLims(self):
-    w = self.W.text().toDouble()[0]
-    e = self.E.text().toDouble()[0]
-    s = self.S.text().toDouble()[0]
-    n = self.N.text().toDouble()[0]
+    w = float(self.W.text())
+    e = float(self.E.text())
+    s = float(self.S.text())
+    n = float(self.N.text())
     return w,e,s,n
   def validate(self):
     w,e,s,n = self.getLims()
@@ -158,8 +158,8 @@ class eventDialog(QDialog):
     self.lat.setText(str(lat))
     self.lon.setText(str(lon))
   def getLatLon(self):
-    lat = self.lat.text().toDouble()[0]
-    lon = self.lon.text().toDouble()[0]
+    lat = float(self.lat.text())
+    lon = float(self.lon.text())
     return lat,lon
   def setParams(self,Lat,Lon,Depth,Label,Mag,Delay):
     self.lat.setText(str(Lat))
@@ -169,12 +169,12 @@ class eventDialog(QDialog):
     self.mag.setText(str(Mag))
     self.delay.setText(str(Delay))
   def getParams(self):
-    lat = self.lat.text().toDouble()[0]
-    lon = self.lon.text().toDouble()[0]
-    depth = self.depth.text().toDouble()[0]
+    lat = float(self.lat.text())
+    lon = float(self.lon.text())
+    depth = float(self.depth.text())
     label = str(self.label.text())
-    mag = self.mag.text().toDouble()[0]
-    delay = self.delay.text().toDouble()[0]
+    mag = float(self.mag.text())
+    delay = float(self.delay.text())
     return lat,lon,depth,label,mag,delay
 
 
@@ -238,8 +238,8 @@ class homeDialog(QDialog):
     self.lat.setText(str(lat))
     self.lon.setText(str(lon))
   def getLatLon(self):
-    lat = self.lat.text().toDouble()[0]
-    lon = self.lon.text().toDouble()[0]
+    lat = float(self.lat.text())
+    lon = float(self.lon.text())
     return lat,lon
   def setParams(self,Lat,Lon,Label,Markersize,Color,Marker):
     self.lat.setText(str(Lat))
@@ -250,10 +250,10 @@ class homeDialog(QDialog):
     Marker = [i[1] for i in matplotlib.markers.MarkerStyle.markers.items() if i[0]==Marker][0]
     self.marker.setCurrentIndex(self.marker.findText(Marker))
   def getParams(self):
-    lat = self.lat.text().toDouble()[0]
-    lon = self.lon.text().toDouble()[0]
+    lat = float(self.lat.text())
+    lon = float(self.lon.text())
     label = str(self.label.text())
-    markersize = self.markersize.text().toDouble()[0]
+    markersize = float(self.markersize.text())
     color = str(self.color.currentText())
     marker = str(self.marker.currentText())
     marker = [i[0] for i in matplotlib.markers.MarkerStyle.markers.items() if i[1]==marker][0]

@@ -55,6 +55,7 @@ ALARMStopic='/topic/eew.alg.elarms.data' # E2 alarms AMQ topic
 DMtopic='/topic/eew.sys.dm.data' # DM event AMQ topic
 EDATAtopic='/topic/eew.alg.elarms.event.data' # event raw data topic
 STATIONS_FILE = '/home/sysop/EEWS/run/bin/stations.cfg' # file with stations ([net] [sta] [lat] [lon])
+FAULTS_FILE = 'faults.txt' # file with faults. a list of nodes (lon lat) each line and END for end of line
 HomeLat=31.7722064 # latitude of "home" location
 HomeLon=35.1958522 # longitude of "home" location
 HomeSize=6 # size of "home" marker
@@ -185,6 +186,7 @@ class AppForm(QMainWindow):
     QApplication.processEvents()
     self.stations = []
     self.load_stations(STATIONS_FILE) # load stations
+    self.load_faults(FAULTS_FILE) # load fault lines
     self.set_home(lat=HomeLat,lon=HomeLon,label=HomeLabel,markersize=HomeSize,color=HomeColor,marker=HomeMarker) # set "home" location
     self.homeDialog = homeDialog(self.home._y[0],self.home._x[0],Label=HomeLabel,Markersize=HomeSize,Color=HomeColor,Marker=HomeMarker) # init and update home dialog
     self.eventDialog = eventDialog() # init an event dialog
@@ -763,6 +765,22 @@ class AppForm(QMainWindow):
     [self.ax.add_line(station) for station in stations] # add stations locations to map
     self.draw(True) # redraw the map
 
+  def load_faults(self, fileurl=FAULTS_FILE):
+    try:
+      faults = []
+      with open(fileurl,'r') as f:
+        a = np.array([])
+        for line in f:
+          line = line.strip().split()
+          if "end" in line:
+            if len(a): faults.append(a)
+            a = np.array([])
+          else:
+            a = np.append(a,np.array(line).astype(np.float))
+      self.faults = [self.ax.plot(f[::2],f[1::2],color='r',lw=0.5,zorder=10) for f in faults]
+    except Exception as msg:
+      print msg
+
   def set_home(self,lat=HomeLat,lon=HomeLon,label=HomeLabel,markersize=HomeSize,color=HomeColor,marker=HomeMarker):
     'plot the "home" location on map'
     if not 'home' in self.__dict__: # if this is the first time we set the home location
@@ -792,8 +810,8 @@ class AppForm(QMainWindow):
     self.redrawbgmap() # redraw the map (updating background maps)
 
   def zoomIsrael(self):
-    'zoom to israel'
-    self.osm.relimcorrected(32.5,37.5,29,34) # adjust map limits
+    'zoom to Trukey'
+    self.osm.relimcorrected(28.1,30.1,39.62,41.413) # adjust map limits
     self.redrawbgmap() # redraw the map (updating background maps)
 
   def ZoomTo(self):
@@ -864,9 +882,9 @@ class AppForm(QMainWindow):
             shortcut="Shift+Ctrl+Z", slot=self.ZoomTo,
             icon='viewmagfit',tip="Zoom to area")
     # Israel
-    ZoomIsrael_action = self.create_action("Zoom To &Israel",
-            shortcut="Shift+Ctrl+I", slot=self.zoomIsrael,
-            icon='viewmag1',tip="Zoom to Israel")
+    ZoomIsrael_action = self.create_action("Zoom To &Turkey",
+            shortcut="Shift+Ctrl+T", slot=self.zoomIsrael,
+            icon='viewmag1',tip="Zoom to Turkey")
     # go to "home" location
     gohome_action = self.create_action("Zoom To &Home",
             shortcut="Shift+Ctrl+V", slot=self.goHomeLocation,

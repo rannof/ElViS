@@ -98,8 +98,7 @@ parser = argparse.ArgumentParser(
          epilog='''Created by Ran Novitsky Nof @ BSL
 (ran.nof@gmail.com)''')
 parser.add_argument('cfgfile',nargs='?',default=None,help='Configuration file.',type=argparse.FileType('r'))
-
-
+parser.add_argument('--replay',default=False,action='store_true', help='Replay mode')
 ##################### Some matplotlib Black Magic ##########################################################
 ## This part will redirect some matplotlib toolbar and canvas callbacks
 ## adjusting navigation bar for capturing after zoom/pan events
@@ -183,6 +182,8 @@ class AppForm(QMainWindow):
     self.osm = osm(self.ax,OSMTILEURL,OSMTILEPAT,OSMTILEARCHIVE) # add open street map generator
     splash.showMessage('Loading stations...',Qt.AlignCenter)
     QApplication.processEvents()
+    self.replay = args.replay # replay mode indicator
+    self.timeshift = 0 # time shift will be determined by the first gm param packet
     self.stations = []
     self.load_stations(STATIONS_FILE) # load stations
     self.set_home(lat=HomeLat,lon=HomeLon,label=HomeLabel,markersize=HomeSize,color=HomeColor,marker=HomeMarker) # set "home" location
@@ -374,6 +375,9 @@ class AppForm(QMainWindow):
       stationIDs = AMQ.ID(message.packets) # get station IDs in message
       params = message.packets[self._watchingGMValue] # get parameter (dmax,vmax,amax for displacement,velocity or acceleration)
       stations = [i for i in self.stations if i.get_label().split()[0] in [s[:-7] for s in stationIDs]] # get mpl lines objects for stations
+      if self.replay and not self.timeshift:  # if we are in a replay mode
+        ptime = datetime.datetime.utcfromtimestamp(message.packets['ts'][0])  # get first packet time stamp
+        self.timeshift = (datetime.datetime.utcnow() - ptime).total_seconds()  # determine timeshift
       for station in stations:
         self.activeStationsList[station]=ts # add a timestamp for station activity
         vals = [abs(v) for i,v in zip(stationIDs,params) if station.get_label().split()[0] in i] # get values for station from all channels (E,N,Z)
@@ -477,7 +481,7 @@ class AppForm(QMainWindow):
       P.set_data(ALRT.wavePoints(lon0,lat0,dt,ALRT.P_WAVE_VELOCITY)) # update P wave location
       redraw= True # don't forget to update the map
       # update ETA to "Home"
-      eta = ALRT.eta_userDisplay(self.home._x[0],self.home._y[0],lon0, lat0, depth0,ot,now) # calculate estimated time of arrival (ETA) of S waves to "home"
+      eta = ALRT.eta_userDisplay(self.home._x[0],self.home._y[0],lon0, lat0, depth0,ot,now - datetime.timedelta(0,self.timeshift)) # calculate estimated time of arrival (ETA) of S waves to "home"
       if eta >= 0: # if we still expect the waves
         self.emit(SIGNAL('updatePanelSignal'),Eid,params,eta) # update the alert panel
       else:

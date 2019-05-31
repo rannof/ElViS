@@ -23,8 +23,16 @@ import stomp,datetime,zlib
 from numpy import frombuffer,dtype,array, zeros
 from xml.dom import minidom
 import logging
-logging.basicConfig()
+logging.basicConfig(
+    format='%(asctime)s | %(levelname)s | %(message)s', datefmt='%Y-%m-%dT%H:%M:%S')
+
 msglock = threading.Lock()
+
+if sys.hexversion >= 0x03000000:  # Python 3+
+  PY3 = True
+else:
+  PY3 = False
+
 
 def ID(a):
   'get network,station,location,channal from a Structured Array.'
@@ -38,20 +46,23 @@ class GMPeak(object):
   def __init__(self,m=None):
     self.type='G'
     # see data structure in GMPeak.h
-    self.headertype = dtype([('type', 'S1'), ('version','>i4'),('source', 'S20'), ('id', '>i4'), ('npackets', '>i4')])
-    self.datatype = dtype([('sta', 'S5'), ('chn', 'S4'), ('net', 'S3'), ('loc', 'S3'), ('lat', '>f8'), ('lon', '>f8'), ('ts', '>f8'), ('nsamps', '>i4'), ('samprate', '>f4'), ('dmax', '>f4'), ('vmax', '>f4'), ('amax', '>f4'), ('dindex', '>i4'), ('vindex', '>i4'), ('aindex', '>i4'), ('latency', '>f4')])
+    self.rawheadertype = dtype([('type', 'S1'), ('version','>i4'),('source', 'S20'), ('id', '>i4'), ('npackets', '>i4')])
+    self.headertype = dtype([('type', 'U1'), ('version','>i4'),('source', 'U20'), ('id', '>i4'), ('npackets', '>i4')])
+    self.rawdatatype = dtype([('sta', 'S5'), ('chn', 'S4'), ('net', 'S3'), ('loc', 'S3'), ('lat', '>f8'), ('lon', '>f8'), ('ts', '>f8'), ('nsamps', '>i4'), ('samprate', '>f4'), ('dmax', '>f4'), ('vmax', '>f4'), ('amax', '>f4'), ('dindex', '>i4'), ('vindex', '>i4'), ('aindex', '>i4'), ('latency', '>f4')])
+    self.datatype = dtype([('sta', 'U5'), ('chn', 'U4'), ('net', 'U3'), ('loc', 'U3'), ('lat', '>f8'), ('lon', '>f8'), ('ts', '>f8'), ('nsamps', '>i4'), ('samprate', '>f4'), ('dmax', '>f4'), ('vmax', '>f4'), ('amax', '>f4'), ('dindex', '>i4'), ('vindex', '>i4'), ('aindex', '>i4'), ('latency', '>f4')])
     self.header = array([],dtype=self.headertype)
     self.packets= array([],dtype=self.datatype)
     if m: self.decode(m)
   def decode(self,m):
     self.raw=m
-    header = frombuffer(m,self.headertype,1)
+    header = frombuffer(m,self.rawheadertype,1)
     try:
-      data = zlib.decompress(m[self.headertype.itemsize+1:])
+      data = zlib.decompress(m[self.rawheadertype.itemsize+1:])
     except:
       data = m[self.headertype.itemsize+1:]
-    self.header = header
-    self.packets = frombuffer(data,self.datatype,header['npackets'])
+    self.header = header.astype(self.headertype)
+    packets = frombuffer(data,self.rawdatatype,header['npackets'][0])
+    self.packets = packets.astype(self.datatype)
   def __call__(self,m):
     self.decode(m)
   def __str__(self):
@@ -68,7 +79,7 @@ class TrigParam(object):
                            ,('recent_sample', '>i4'),('samplerate', '>f4'),('toffset', '>f4'),('arrtime', '>f8')\
                            ,('protime', '>f4'),('fndtime', '>f4'),('quetime', '>f4'),('sndtime', '>f4')\
                            ,('trigvalues',self.trigvaluestype,10)])
-    self.datatype = dtype([('sta', 'S5'), ('chn', 'S4'), ('net', 'S3'), ('loc', 'S3'), ('lat', '>f8'), ('lon', '>f8')\
+    self.datatype = dtype([('sta', 'U5'), ('chn', 'U4'), ('net', 'U3'), ('loc', 'U3'), ('lat', '>f8'), ('lon', '>f8')\
 						   ,('ts', datetime.datetime),('msec','>i4'),('packlength', '>i4')\
                            ,('recent_sample', '>i4'),('samplerate', '>f4'),('toffset', '>f4'),('arrtime', '>f8')\
                            ,('protime', '>f4'),('fndtime', '>f4'),('quetime', '>f4'),('sndtime', '>f4')\
@@ -101,7 +112,7 @@ class Trigger(object):
     self.lon=0.0
     self.ts=datetime.datetime.min
     self.rawtype = dtype([('type', 'S1'),('version','>i4'), ('source', 'S20'), ('id', '>i4'), ('sta', 'S5'), ('chn', 'S4'), ('net', 'S3'), ('loc', 'S3'), ('lat', '>f8'), ('lon', '>f8'), ('sec', '>i4'), ('msec', '>i4')])
-    self.datatype = dtype([('sta', 'S5'), ('chn', 'S4'), ('net', 'S3'), ('loc', 'S3'), ('lat', '>f8'), ('lon', '>f8'), ('ts', datetime.datetime)])
+    self.datatype = dtype([('sta', 'U5'), ('chn', 'U4'), ('net', 'U3'), ('loc', 'U3'), ('lat', '>f8'), ('lon', '>f8'), ('ts', datetime.datetime)])
     if m: self.decode(m)
   def decode(self,m):
     self.raw=m
@@ -171,18 +182,18 @@ class algXML(object):
 
 # listner class for connecting to activeMQ
 class AMQListener(object):
-  def __init__(self,subscribeTo='/topic/eew.sys.dm.data',usr='monitor',passwd='monitor',name='listner',ID=1,verbose=False,log=False,host_and_ports=[('localhost',61613)],**kwargs):
-    self.MESSAGES = []
+  def __init__(self,subscribeTo='/topic/eew.sys.dm.data',usr='monitor',passwd='monitor',name='listner',ID=1,verbose=False,log=False, loglevel='CRITICAL', host_and_ports=[('localhost',61613)], auto_decode=False, **kwargs):
+    self.MESSAGES = []  # cash messages
     self.SUBSCRIBES = {}
-    self.maxmessages=200
-    self.subscribeTo=subscribeTo
-    self.name=name
-    self.usr=usr
-    self.passwd=passwd
+    self.maxmessages=200  # cash messages max number
+    self.subscribeTo=subscribeTo  # Default topic
+    self.name=name  # Listener name
+    self.usr=usr  # AMQ user
+    self.passwd=passwd  # AMQ password
     self.id=ID
-    self.logit=log
+    self.logit=log  # should we save data to file?
     self._lastMessage = None
-    self._verbose=verbose
+    self._verbose=verbose  # print to screen?
     self.host_and_ports=host_and_ports
     self._procfuncs = {
                        'T':Trigger,
@@ -195,25 +206,27 @@ class AMQListener(object):
     self.triglogext='.trig'
     self.evntlogpath='log/events_'
     self.evntlogext='.log'
-    self.conn = stomp.Connection(host_and_ports=host_and_ports,**kwargs)
+    self.conn = stomp.Connection(host_and_ports=host_and_ports,auto_decode=auto_decode,**kwargs)
     self.conn.set_listener(self.name, self)
     if log and not os.path.exists('log'):
       sys.exit("Can't find logging directory: ./log\nCreate a directory:\nmkdir log")
+    self.log = logging.getLogger('AMQ_{name}'.format(name=name))
+    self.log.setLevel(loglevel)
 
   def connectToActiveMQ(self):
-    if self._verbose: print >> sys.stderr,self.name+' Trying to Connect to AMQ server'
+    if self._verbose: self.log.debug('Trying to Connect to AMQ server')
     self.conn.start()
     if not self.conn.is_connected(): self.conn.connect(self.usr,self.passwd,wait=True)
 
   def on_connecting(self,host_and_port):
     host,port = self.conn.transport.current_host_and_port
-    if self._verbose: print >> sys.stderr,self.name+' Connected to '+':'.join([host,str(port)])
+    if self._verbose: self.log.debug(' Connected to '+':'.join([host,str(port)]))
 
   def on_disconnected(self):
-    if self._verbose: print >> sys.stderr,self.name+' Connection lost...'
+    if self._verbose: self.log.debug(' Connection lost...')
 
   def on_error(self, headers, message):
-    if self._verbose: print >> sys.stderr,self.name+' received an error %s' % message
+    if self._verbose: self.log.error('received an error {message}').format(message=message)
 
   def on_message(self, headers, message):
     self.MESSAGES += [(headers,message)]
@@ -226,37 +239,39 @@ class AMQListener(object):
 
   def savebin(self,m):
     ts = datetime.datetime.utcnow().strftime("%Y%m%d")
-    f = open(self.triglogpath+ts+self.triglogext,'ab')
     l = array([len(m)],dtype='>i4').tostring()
-    f.write(l)
-    f.write(m)
-    f.close()
+    with open(self.triglogpath+ts+self.triglogext,'ab') as f:
+      f.write(l)
+      f.write(m)
 
   def savetxt(self,m):
     t = datetime.datetime.utcnow()
     ts = datetime.datetime.utcnow().strftime("%Y%m%d")
-    f = open(self.evntlogpath+ts+self.evntlogext,'a')
-    print >> f,t.isoformat()[:-3]+'Z'
-    print >> f,m
-    f.close()
+    with open(self.evntlogpath+ts+self.evntlogext,'a') as f:
+      f.write(t.isoformat()[:-3]+'Z ')
+      f.write(m+'\n')
 
   def _processMessages(self,lastmessage):
     msglock.acquire()
     m = lastmessage
-    if m[0] in ['T','P'] and self.logit:
+    mtype = m[:1].decode()
+    if mtype in ['T','P'] and self.logit:
       self.savebin(m)
-    if m[0] in ['<'] and self.logit:
-      self.savetxt(m)
-    if m[0] in self._procfuncs:
+    if mtype in ['<'] and self.logit:
+      self.savetxt(m.decode())
+    if mtype in self._procfuncs:
       try:
-        self._lastMessage = self._procfuncs[m[0]](m)
-        if self._verbose: print >> sys.stdout,self._lastMessage
-      except Exception,msg:
-        if self._verbose: print >> sys.stderr,self.name+' Unknown message %s \n*************\n%s\n*************\n'% (m,msg)
+        self._lastMessage = self._procfuncs[mtype](m)
+        if self._verbose: self.log.info(self._lastMessage)
+      except Exception as msg:
+        if self._verbose: self.log.error(' Unknown message {m} \n*************\n{msg}\n*************\n'.format(m=m,msg=msg))
         msglock.release()
         return
+    elif mtype in ['K']:
+      msglock.release()
+      return
     else:
-      if self._verbose: print >> sys.stderr,self.name+' Unknown message %s'% m
+      if self._verbose: self.log.debug(' Unknown message {m}'.format(m=m))
       msglock.release()
       return
     self.processMessages()
@@ -270,7 +285,7 @@ class AMQListener(object):
     if not self.conn.is_connected(): return 0
     self.conn.subscribe(destination=destination, id=ID, ack=ack)
     self.SUBSCRIBES[ID]=destination
-    if self._verbose: print >> sys.stderr,'subscribed to %s'%destination
+    if self._verbose: self.log.debug('subscribed to {destination}'.format(destination=destination))
     return 1
 
   def unsubscribeToActiveMQ(self,ID=None):
@@ -280,9 +295,9 @@ class AMQListener(object):
     return 1
 
   def disconnectToActiveMQ(self):
-    if self._verbose: print >> sys.stderr,'Disconnecting from server...'
+    if self._verbose: self.log.debug('Disconnecting from server...')
     self.conn.disconnect()
-
+    return 1
 
 def getDMxmlmsg(Eid,mag,lat,lon,depth,delay,msgcat='test'):
   now = datetime.datetime.utcnow()
@@ -334,7 +349,7 @@ def getE2xmlmsg(Eid,mag,lat,lon,depth,delay,msgcat='test'):
 
 # writer class for connecting to activeMQ
 class AMQWriter(object):
-  def __init__(self,dest='/topic/eew.sys.dm.data',usr='decimod',passwd='decimod',name='writer',id=1,verbose=False,host_and_ports=[('localhost',61613)]):
+  def __init__(self,dest='/topic/eew.sys.dm.data',usr='decimod',passwd='decimod',name='writer',id=1,verbose=False,loglevel='CRITICAL',host_and_ports=[('localhost',61613)]):
     self.MESSAGES = []
     self.maxmessages=200
     self.dest=dest
@@ -344,12 +359,14 @@ class AMQWriter(object):
     self.id=id
     self._verbose=verbose
     self.host_and_ports = host_and_ports
+    self.log = logging.getLogger('AMQ_{name}'.format(name=name))
+    self.log.setLevel(loglevel)
 
   def on_disconnected(self):
-    if self._verbose: print >> sys.stderr,self.name+' Disconnected.'
+    if self._verbose: self.log.debug(' Disconnected.')
 
   def on_error(self, headers, message):
-    print >> sys.stderr,self.name+' received an error %s' % message
+    self.log.error(' received an error {message}'.format(message=message))
 
   def on_message(self, headers, message):
     'process messages. replace with your own function.'

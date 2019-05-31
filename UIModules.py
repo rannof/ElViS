@@ -24,9 +24,11 @@
 # ran.nof@gmail.com
 
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-import datetime,matplotlib,os
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
+import datetime
+from matplotlib import markers, colors
 
 # zoomto form line class
 class zoomLineEdit(QLineEdit):
@@ -212,15 +214,15 @@ class homeDialog(QDialog):
     grid.addWidget(markersize,4,2)
     colorLabel = QLabel('Color')
     color = QComboBox()
-    [color.addItem(i) for i in matplotlib.colors.cnames]
+    [color.addItem(i) for i in colors.cnames]
     color.setCurrentIndex(color.findText(Color))
     color.setMaxVisibleItems(10)
     grid.addWidget(colorLabel,5,1)
     grid.addWidget(color,5,2)
     markerLabel = QLabel('Marker')
     marker = QComboBox()
-    [marker.addItem(i) for i in matplotlib.markers.MarkerStyle.markers.values() if not i =='nothing']
-    Marker = [i[1] for i in matplotlib.markers.MarkerStyle.markers.items() if i[0]==Marker][0]
+    [marker.addItem(i) for i in markers.MarkerStyle.markers.values() if not i =='nothing']
+    Marker = [i[1] for i in markers.MarkerStyle.markers.items() if i[0]==Marker][0]
     marker.setCurrentIndex(marker.findText(Marker))
     grid.addWidget(markerLabel,6,1)
     grid.addWidget(marker,6,2)
@@ -247,16 +249,16 @@ class homeDialog(QDialog):
     self.label.setText(str(Label))
     self.markersize.setText(str(Markersize))
     self.color.setCurrentIndex(self.color.findText(Color))
-    Marker = [i[1] for i in matplotlib.markers.MarkerStyle.markers.items() if i[0]==Marker][0]
+    Marker = [i[1] for i in markers.MarkerStyle.markers.items() if i[0]==Marker][0]
     self.marker.setCurrentIndex(self.marker.findText(Marker))
   def getParams(self):
     lat = float(self.lat.text())
     lon = float(self.lon.text())
     label = str(self.label.text())
-    markersize = self.markersize.text().toDouble()[0]
+    markersize = float(self.markersize.text())
     color = str(self.color.currentText())
     marker = str(self.marker.currentText())
-    marker = [i[0] for i in matplotlib.markers.MarkerStyle.markers.items() if i[1]==marker][0]
+    marker = [i[0] for i in markers.MarkerStyle.markers.items() if i[1]==marker][0]
     return lat,lon,label,markersize,color,marker
 
 class messageLogger(QTextEdit):
@@ -330,6 +332,8 @@ class alertPanel(QMainWindow):
 
 
   '''
+  # Signals
+  RemoveEID = pyqtSignal(str)  # remove signal
   def __init__(self,parent=None):
     QMainWindow.__init__(self,parent)
     self.parent=parent
@@ -352,10 +356,10 @@ class alertPanel(QMainWindow):
     dock.setGeometry(dock.pos().x(),dock.pos().y(),self.parent.width()-18,200)
     def removeEid(self,visible):
       if not visible:
-        self.emit(SIGNAL('RemoveEID'),Eid)
+        self.RemoveEID.emit(Eid)
         self.destroy()
     dock.closeEvent = removeEid.__get__(dock,dock.__class__)
-    self.connect(dock,SIGNAL('RemoveEID'),self.removeEventID)
+    self.RemoveEID.connect(self.removeEventID)
   def updatePanel(self,Eid,params,eta):
     if not Eid in self.eq: return
     eq = self.eq[Eid]

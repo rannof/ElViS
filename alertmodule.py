@@ -28,7 +28,10 @@
 #
 import numpy as np
 import re,math
-from urllib import urlopen
+try:
+    from urllib import urlopen
+except ImportError:
+    from urllib.request import urlopen
 import ElViSCUtils as cutil # must be compiled with swig
 # from User Display
 P_WAVE_VELOCITY = 6.10

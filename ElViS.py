@@ -25,7 +25,7 @@
 
 import matplotlib as mpl
 import datetime
-mpl.use('QT4Agg')
+mpl.use('QT5Agg')
 #from pylab import Line2D
 import numpy as np
 import sys,os
@@ -35,8 +35,9 @@ from matplotlib.backends.backend_qt4agg import(
     NavigationToolbar2QT as NavigationToolbar)
 from matplotlib.figure import Figure
 from matplotlib import cm
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
 # command line parser
 import argparse
 # utils for ActiveMQ
@@ -149,6 +150,20 @@ NavigationToolbar2.release_zoom = new_release_zoom
 # QT Form Apllication - the main application.
 class AppForm(QMainWindow):
   'QT form for application'
+  #  Signals
+  drawSignal = pyqtSignal(int)  # redraw map
+  chkconnsignal = pyqtSignal()  # check AMQ connection
+  togconnstatsignal = pyqtSignal()  # toggle AMQ connection Icon
+  addPanelSignal = pyqtSignal(str,object)  # add EQ alert info panel
+  updatePanelSignal = pyqtSignal(object,object,object)  # update EQ alert panel
+  # messages signals
+  sysMsgSignal = pyqtSignal(str, int)  # add system message
+  trigMsgSignal = pyqtSignal(str,str)  # add trigger message
+  evntMsgSignal = pyqtSignal(str,int)  # add event message
+  errMsgSignal = pyqtSignal(str,int)  # add error message
+
+
+
   def __init__(self, splash,args,parent=None):
     splash.showMessage('Initializing...',Qt.AlignCenter)
     QApplication.processEvents()
@@ -225,14 +240,14 @@ class AppForm(QMainWindow):
     self.ActiveWarningsTimer.start(300) # every 300 milliseconds
 
   def init_connections(self):
-    '''Connect signals to functions.
-       Using signals to run functions from subprocesses.'''
-    self.connect(self,SIGNAL('chkconnsignal'),self.chkconn) # check AMQ connection
-    self.connect(self,SIGNAL('togconnstatsignal'),self.togconnstat) # toggle AMQ connection Icon
-    self.connect(self,SIGNAL('redrawbgmapSignal'),self.redrawbgmap) # readraw background map
-    self.connect(self,SIGNAL('addPanelSignal'),self.alertPanel.addPanel) # add EQ alert info panel
-    self.connect(self,SIGNAL('updatePanelSignal'),self.alertPanel.updatePanel) # update EQ alert panel
-    self.connect(self,SIGNAL('drawSignal'),self.draw) # draw canvas
+    """Connect signals to functions.
+       Using signals to run functions from subprocesses.
+    """
+    self.chkconnsignal.connect(self.chkconn)  # check AMQ connection
+    self.togconnstatsignal.connect(self.togconnstat)  # toggle AMQ connection Icon
+    self.addPanelSignal.connect(self.alertPanel.addPanel)  # add EQ alert info panel
+    self.updatePanelSignal.connect(self.alertPanel.updatePanel)  # update EQ alert panel
+    self.drawSignal.connect(self.draw)  # draw canvas
     # connect widget ok buttons to functions
     self.homeDialog.accepted.connect(self.onSetHomeLocationAccepted) # connect home settings dialog ok button
     self.eventDialog.accepted.connect(self.onNewEventAccepted) # connect event settings dialog ok button
@@ -249,10 +264,10 @@ class AppForm(QMainWindow):
     self.canvas.mpl_connect('button_release_event',self.on_unclick) # connect mouse button release on canvas
     self.canvas.mpl_connect('resize_event',self.resizeEvent) # connect resize event
     # connect messages signals
-    self.connect(self,SIGNAL('sysMsgSignal'),self.sysmsg.add) # add system message
-    self.connect(self,SIGNAL('trigMsgSignal'),self.trigmsg.add) # add trigger message
-    self.connect(self,SIGNAL('evntMsgSignal'),self.evntmsg.add) # add event message
-    self.connect(self,SIGNAL('errMsgSignal'),self.errmsg.add) # add error message
+    self.sysMsgSignal.connect(self.sysmsg.add)  # add system message
+    self.trigMsgSignal.connect(self.trigmsg.add)  # add trigger message
+    self.evntMsgSignal.connect(self.evntmsg.add)  # add event message
+    self.errMsgSignal.connect(self.errmsg.add)  # add error message
 
   def draw(self,idle=True):
     'Draw the figure on canvas.'
@@ -273,13 +288,13 @@ class AppForm(QMainWindow):
     'runs automatically when AMQ server is connected'
     host,port=host_and_port
     m = 'Connected to ActivMQ server @ '+':'.join([host,str(port)])
-    self.emit(SIGNAL('sysMsgSignal'),m,True) # send a system message
-    self.emit(SIGNAL('chkconnsignal')) # verify connection (will also update icon and tooltip)
+    self.sysMsgSignal.emit(m,True) # send a system message
+    self.chkconnsignal.emit() # verify connection (will also update icon and tooltip)
 
   def on_disconnected(self):
     'runs automatically when AMQ is disconnected'
-    self.emit(SIGNAL('sysMsgSignal'),'Disconnected from ActiveMQ server.',True) # send a system message
-    self.emit(SIGNAL('chkconnsignal')) # verify connection (will also update icon and tooltip)
+    self.sysMsgSignal.emit('Disconnected from ActiveMQ server.',True) # send a system message
+    self.chkconnsignal.emit() # verify connection (will also update icon and tooltip)
 
   def subscribeToAMQ(self,topics):
     'subscribe to topics on AMQ server.'
@@ -292,7 +307,11 @@ class AppForm(QMainWindow):
 
   def connectToAMQ(self):
     'connect listener to AMQ server'
-    self.amq.connectToActiveMQ()
+    try:
+      self.amq.connectToActiveMQ()
+      self.chkconnsignal.emit()
+    except TimeoutError:
+      self.sysmsg.add("Can't connect to AMQ @ "+self.amq.host_and_ports,True)
 
   def disconnectAMQ(self):
     'Diconnect Listener from AMQ server'
@@ -303,8 +322,13 @@ class AppForm(QMainWindow):
 
   def reconnectToAMQ(self):
     'reconnect to AMQ server'
+    try:
+        self.disconnectAMQ()
+    except Exception as msg:
+        self.errmsg.add(str(msg),True)
     self.connectToAMQ() # connect
     self.subscribeToAMQ(topics) # subscribe
+#    self.chkconnsignal.emit()
 
   def connectToNewAMQ(self):
     '''connect to a new AMQ.
@@ -361,16 +385,16 @@ class AppForm(QMainWindow):
   def processAMQmsg(self):
     'Runs automatically every time a message arrives from AMQ server'
     ts = datetime.datetime.utcnow() # get current time stamp
-    self.emit(SIGNAL('togconnstatsignal')) # toggle AMQ connection icon
+    self.togconnstatsignal.emit() # toggle AMQ connection icon
     l = self.amq # easier shortcut
     message = l._lastMessage # get last message
     if message.type=='T': # trigger message
-      self.emit(SIGNAL('trigMsgSignal'),str(message),datetime.datetime.utcnow().strftime('[%T.%f] ')) # send a trigger message
+      self.trigMsgSignal.emit(str(message),datetime.datetime.utcnow().strftime('[%T.%f] ')) # send a trigger message
       stationID = AMQ.ID(message.packets)[0][:-7] # get station ID
       station = [i for i in self.stations if stationID in i.get_label()][0] # find first station in self.stations (matplotlib lines) with a label similar to stationID
       self.trigstation(station) # Mark station as triggered
       self.trigedlist[station]=ts # add time stamp to triggered station list
-      self.emit(SIGNAL('drawSignal'),True) # redraw figure if idle
+      self.drawSignal.emit(True) # redraw figure if idle
     if message.type=='G': # ground values
       stationIDs = AMQ.ID(message.packets) # get station IDs in message
       params = message.packets[self._watchingGMValue] # get parameter (dmax,vmax,amax for displacement,velocity or acceleration)
@@ -386,9 +410,9 @@ class AppForm(QMainWindow):
         station.set_markerfacecolor(color) # set station color
         station.set_zorder(10) # move station to front of visibility
         station.set_label(station.get_label().split()[0]+' (%s=%0.2e)'%(self._watchingGMValue,val)) # set station label with value
-      self.emit(SIGNAL('drawSignal'),True) # redraw figure if idle
+      self.drawSignal.emit(True) # redraw figure if idle
     if message.type=='X': # event message (X=xml)
-      self.emit(SIGNAL('evntMsgSignal'),str(message),True) # send an event message
+      self.evntMsgSignal.emit(str(message),True) # send an event message
       self.processEvent(message) # process the event
   ########## AMQ related functions END ###########
 
@@ -411,19 +435,18 @@ class AppForm(QMainWindow):
     # uncomment for a zoom to event
     #self.ax.set_ylim(m.lat-0.5,m.lat+0.5)
     #self.ax.set_xlim(m.lon-0.5,m.lon+0.5)
-    #self.emit(SIGNAL('redrawbgmapSignal'))
     # comment for a zoom to event
-    self.emit(SIGNAL('drawSignal'))
+    self.drawSignal.emit(False)
 
   def clear_events(self):
     'Clear all events from memory and map except for the active events'
     for Eid in self.eventsList.keys(): # for every event
-      if not self.activeWarnings.has_key(Eid): # if not active warning
+      if not Eid in self.activeWarnings: # if not active warning
         for m in self.eventsList[Eid]: # for every solution fount and displayed
           m.point.remove() # remove the point from map
         self.eventsList.pop(Eid) # remove event form event list
         if Eid in self.alertPanel.eq: self.alertPanel.eq[Eid].widget.parent().close() # remove panel if still visible
-    self.emit(SIGNAL('drawSignal'))
+    self.drawSignal.emit(False)
 
   def starteventwarning(self,m):
     '''Add an event warning panel or update an existing one.
@@ -440,14 +463,14 @@ class AppForm(QMainWindow):
                  'azimuth':m.azimuth,
                  'point':m.point
                  } # get parameters for panel
-    if not self.activeWarnings.has_key(m.Eid): # if this is the first time we open a panel for the event
+    if not m.Eid in self.activeWarnings: # if this is the first time we open a panel for the event
       params['S'] = mpl.lines.Line2D(np.ones(361)*m.lon,np.ones(361)*m.lat,c='red',label='S wave '+str(m)) # Create a line for S wave on map
       params['P'] = mpl.lines.Line2D(np.ones(361)*m.lon,np.ones(361)*m.lat,c='blue',label='P wave '+str(m))# Create a line for P wave on map
       self.ax.add_line(m.point) # add a point for event location on map
       self.ax.add_line(params['S']) # add a line for S wave on map
       self.ax.add_line(params['P']) # add a line for P wave on map
       self.activeWarnings[m.Eid] = params # update the current parameters of warning
-      self.emit(SIGNAL('addPanelSignal'),m.Eid,params) # add a warning panel widget - see UIModules for panel class details
+      self.addPanelSignal.emit(m.Eid,params) # add a warning panel widget - see UIModules for panel class details
     else: # or if this is an update
       self.ax.add_line(m.point) # add a corrected location
       self.eventsList[m.Eid][-2].point.set_mfc('None') # change color of old location
@@ -483,10 +506,10 @@ class AppForm(QMainWindow):
       # update ETA to "Home"
       eta = ALRT.eta_userDisplay(self.home._x[0],self.home._y[0],lon0, lat0, depth0,ot,now - datetime.timedelta(0,self.timeshift)) # calculate estimated time of arrival (ETA) of S waves to "home"
       if eta >= 0: # if we still expect the waves
-        self.emit(SIGNAL('updatePanelSignal'),Eid,params,eta) # update the alert panel
+        self.updatePanelSignal.emit(Eid,params,eta) # update the alert panel
       else:
-        self.emit(SIGNAL('updatePanelSignal'),Eid,params,0) # or just put a zero if S wave has passed, hoping someone is still there to see it.
-    if redraw: self.emit(SIGNAL('drawSignal')) # update the map with all changes
+        self.updatePanelSignal.emit(Eid,params,0) # or just put a zero if S wave has passed, hoping someone is still there to see it.
+    if redraw: self.drawSignal.emit(False) # update the map with all changes
 
   def processactivestations(self):
     '''process active station. update non-active stations.
@@ -499,9 +522,9 @@ class AppForm(QMainWindow):
         if (ts-self.activeStationsList[station]).total_seconds()>60: # if last message from station is over a minute ago
           redraw = True # don't forget to update at the end
           station.set_markerfacecolor('k') # turn station color to black (not active)
-          self.emit(SIGNAL('errMsgSignal'),'Station %s is inactive for the last 60 sec.' % station.get_label().split()[0],True) # send an error message
+          self.errMsgSignal.emit('Station %s is inactive for the last 60 sec.' % station.get_label().split()[0],True) # send an error message
           self.activeStationsList.pop(station) # remove form active station list
-    if redraw: self.emit(SIGNAL('drawSignal')) # update map if needed.
+    if redraw: self.drawSignal.emit(False) # update map if needed.
 
   def processtrigs(self):
     '''Process triggered stations.
@@ -514,7 +537,7 @@ class AppForm(QMainWindow):
           redraw = True # don't forget to update the map
           self.untrigstation(station) # un-trigger the station (i.e. remove highlighting)
           self.trigedlist.pop(station) # remove station from triggered station list
-    if redraw: self.emit(SIGNAL('drawSignal')) # update map if needed
+    if redraw: self.drawSignal.emit(False) # update map if needed
 
   def trigstation(self,station):
     '''mark station marker as triggered.
@@ -601,7 +624,7 @@ class AppForm(QMainWindow):
     self.osm.relimcorrected(x0,x1,y0,y1) # make sure limits are not out of map phisical boundaries. see osm module for more details.
     tiles = self.osm.gettiles(x0,x1,y0,y1) # get the needed tiles from buffer or url. see osm module for more details
     self.osm.plottiles(tiles) # plot the tiles. see osm module for more details
-    self.emit(SIGNAL('drawSignal')) # call self draw using a signal in case we are in a subprocess.
+    self.drawSignal.emit(False) # call self draw using a signal in case we are in a subprocess.
     self.statusBar().showMessage('Done redrawing.',2000) # note user we are done with redrawing.
     QApplication.processEvents() # make sure user see the message
 
@@ -616,12 +639,12 @@ class AppForm(QMainWindow):
       if evt.button==3: # check if we measure distance along the map (right button is clicked)
         self.meter.set_data([self.meter._xorig[0],evt.xdata],[self.meter._yorig[0],evt.ydata]) # adjust meter line edges
         self.statusBar().showMessage('Distance: %lfkm'%ALRT.cutil.geo_to_km(self.meter._xorig[0],self.meter._yorig[0],self.meter._xorig[-1],self.meter._yorig[-1])[0]) # show user the distance
-        self.emit(SIGNAL('drawSignal'),True) # draw the map
+        self.drawSignal.emit(True) # draw the map
         return # we're done here
       hide = True # unless we don't measure but simply pointing along the map
       label = [] # a list of labels to present in a tooltip
-      for l in self.ax.hitlist(evt): # see if mouse points at objects of the map
-        if l in self.ax.lines: # if object is a line
+      for l in self.ax.lines: # see if mouse points at objects of the map
+        if l.contains(evt)[0]: # if object is a line
           label += [l.get_label()] # get it's label to the list
           hide=False # a flag for tooltip widget
       if not hide: # if we don't hide the tooltip
@@ -656,15 +679,15 @@ class AppForm(QMainWindow):
     'handle mouse unclick or mouse button release'
     if evt.button==3 and any(self.meter.get_data()): # if its the right button and there is some data set in the meter
       self.meter.remove() # remove the meter from the axes
-      self.emit(SIGNAL('drawSignal'),True) # redraw the map
+      self.drawSignal.emit(True) # redraw the map
       self.statusBar().showMessage('Distance: %lfkm'%ALRT.cutil.geo_to_km(self.meter._xorig[0],self.meter._yorig[0],self.meter._xorig[-1],self.meter._yorig[-1])[0],1000) # last update of the measurement distance
       self.meter.set_data([],[]) # remove any data from the meter line
 
   def save_figure(self):
-    print 'todo: save_figure'
+    print('todo: save_figure')
 
   def saveAs_figure(self):
-    print 'todo: saveAs_figure'
+    print('todo: saveAs_figure')
 
   def create_main_frame(self):
     'Create the main window widget with spliter, figure, toolbar'
@@ -754,9 +777,9 @@ class AppForm(QMainWindow):
        for comments in file use '#'
     '''
     try:
-      stations = np.loadtxt(fileurl,dtype=np.dtype([('net','|S2'),('sta','|S5'),('lat',float),('lon',float)]),usecols=xrange(4)) # read file
-    except Exception,msg:
-#      self.message("Can't load stations from %s: \n"%(fileurl)+msg.message,'ElViS - Error loading stations') # show a message window if failed
+      stations = np.loadtxt(fileurl,dtype=np.dtype([('net','|U2'),('sta','|U5'),('lat',float),('lon',float)]),usecols=range(4)) # read file
+    except Exception as msg:
+#      self.message("Can't load stations from %s: \n"%(fileurl)+msg,'ElViS - Error loading stations') # show a message window if failed
       return
     ids = ['.'.join([n,s]) for n,s in zip(stations['net'],stations['sta'])] # get stations ids as net.sta
     stations = [mpl.lines.Line2D([stations['lon'][i]],[stations['lat'][i]],marker='^',c='k',ms=6,label=ids[i]) for i in range(len(ids))] # create lines (a marker) for each station
@@ -777,7 +800,7 @@ class AppForm(QMainWindow):
     self.home.set_markersize(markersize) # update marker size
     self.home.set_color(color) # update marker color
     self.home.set_marker(marker) # update marker type
-    self.emit(SIGNAL('drawSignal'),True) # redraw the map
+    self.drawSignal.emit(True)
 
   def setHomeLocation(self):
     'open home setup dialog'
@@ -964,7 +987,7 @@ class AppForm(QMainWindow):
       else:
         target.addAction(action)
 
-  def create_action(  self, text, slot=None, shortcut=None,
+  def create_action(self, text, slot=None, shortcut=None,
                       icon=None, tip=None, checkable=False,
                       signal="triggered()"):
     'Utility function for menu actions creation'
@@ -979,7 +1002,8 @@ class AppForm(QMainWindow):
       action.setToolTip(tip)
       action.setStatusTip(tip)
     if slot is not None:
-      self.connect(action, SIGNAL(signal), slot)
+      #self.connect(action, SIGNAL(signal), slot)
+      action.triggered.connect(slot)
     if checkable:
       action.setCheckable(True)
     return action
@@ -1056,6 +1080,7 @@ this application; if not, see <a href='http://www.gnu.org/licenses/'>http://www.
     QMessageBox.about(self,title,msg)
 
 def main(args):
+  print(VERBOSE)
   # create the application
   app = QApplication(sys.argv)
   #splash
@@ -1076,7 +1101,11 @@ if __name__=="__main__":
   # parse the arguments
   args = parser.parse_args(sys.argv[1:])
   if args.cfgfile:
-    exec(args.cfgfile) # execute configuration file
+    # execute configuration file
+    try:
+      exec(args.cfgfile)  # python2
+    except TypeError:
+      exec(args.cfgfile.read())  # python3
   topics = {'gmpeak':GMPEAKtopic, # peak parameters AMQ topic
           'trigger':TRIGGERtopic, # trigger and trigger parameters AMQ topic
           'alarms':ALARMStopic, # E2 alarms AMQ topic

@@ -4,35 +4,78 @@ Elarms is an Earthquake Early Warning System (EEWS), developed at Berkeley Seism
 This tool is aimed for visually monitoring the ElarmS system.<br>
 Created by Ran Novitsky Nof (ran.rnof.info), 2014.  
 #### DEPENDENCIES:
+The code is now suitable for Python3 and QT5,
+but may also work (with some adjustments)
+with Python 2.7 and QT4 (see Installation)
+
+For compiling C modules:
+
 -  swig - http://swig.org
 
-python (tested on 2.7) modules:
+python (tested on 3.7) modules:
 
 -   numpy - http://numpy.org
 -   obspy - http://obspy.org
 -   matplotlib - http://matplotlib.org
--   PyQt4 - http://www.riverbankcomputing.com
--   stomp - https://github.com/jasonrbriggs/stomp.py
+-   PyQt4 or PyQt5 - http://www.riverbankcomputing.com
+-   stomp.py - https://github.com/jasonrbriggs/stomp.py
+-   httplib2
+-   Pillow
+More details in requirements.txt file
 
 C external software (included as c files):
 
 -   geodesic - http://geographiclib.sourceforge.net/html/C/
 
 #### INSTALL:
+**_For Python3 and QT5_**
+
+  Install dependancies using pip for Python3:
+  ```
+  pip3 install -r requirements.txt
+  ```
   on terminal at main directory, run:
   ```
   make
   ```
+**_For Python2 and QT4_**
 
+  Install dependancies using pip for Python3:
+  ```
+  pip install -r requirements.txt
+  ```
+  Depending on OS, some packages might need to update version in the requirements.txt file
+  for example, matplotlib version might need to be adjusted
+  Also, Some packages might require system installation
+  for example, on Ubuntu 18.04 QT5 might need:
+  ```
+  sudo apt install python-pyqt5
+  ```
+  The make file would need to be adjusted to python2:
+  ```
+  sed 's/python3/python/;' Makefile > Makefile_py2
+  ```
+  on terminal at main directory, run:
+  ```
+  make -f Makefile_py2
+  ```
+  Also, Make sure python reference in ElViS.py first line is correct for OS:
+  ```
+  change
+  #!/usr/bin/env python3
+  to
+  #!/usr/bin/env python
+  ```
 #### USAGE:
 <pre>
-ElViS.py [-h] [cfgfile]
+ElViS.py [-h] [--replay] [cfgfile]
 
 positional arguments:  
   cfgfile     Configuration file.
 
 optional arguments:  
   -h, --help  show this help message and exit
+  --replay    Replay mode
 </pre>  
 
 ![screenshot](screenshot.jpg)  

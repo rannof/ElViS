@@ -25,19 +25,32 @@
 
 import matplotlib as mpl
 import datetime
-mpl.use('QT5Agg')
+try:
+  mpl.use('QT5Agg')
+except ImportError:
+  mpl.use('QT4agg')
 #from pylab import Line2D
 import numpy as np
 import sys,os
 from matplotlib.backend_bases import NavigationToolbar2, Event
-from matplotlib.backends.backend_qt4agg import(
+if mpl.get_backend() == 'QT4agg':
+  from matplotlib.backends.backend_qt4agg import(
+    FigureCanvasQTAgg as FigureCanvas,
+    NavigationToolbar2QT as NavigationToolbar)
+else:
+  from matplotlib.backends.backend_qt5agg import(
     FigureCanvasQTAgg as FigureCanvas,
     NavigationToolbar2QT as NavigationToolbar)
 from matplotlib.figure import Figure
 from matplotlib import cm
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
+try:
+  from PyQt5.QtCore import *
+  from PyQt5.QtGui import *
+  from PyQt5.QtWidgets import *
+except ImportError:
+  from PyQt4.QtCore import *
+  from PyQt4.QtGui import *
+
 # command line parser
 import argparse
 # utils for ActiveMQ
@@ -161,8 +174,6 @@ class AppForm(QMainWindow):
   trigMsgSignal = pyqtSignal(str,str)  # add trigger message
   evntMsgSignal = pyqtSignal(str,int)  # add event message
   errMsgSignal = pyqtSignal(str,int)  # add error message
-
-
 
   def __init__(self, splash,args,parent=None):
     splash.showMessage('Initializing...',Qt.AlignCenter)

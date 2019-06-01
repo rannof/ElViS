@@ -21,6 +21,7 @@ CC = gcc
 CCFLAGS = -O2 -Wall
 LIBFLAGS = -lm
 sysswig := $(shell which swig)
+PYINCLUDE := $(shell python3-config --includes)
 
 all: ElViSCUtils
   
@@ -28,8 +29,8 @@ ElViSCUtils:
 	$(CC) $(CCFLAGS) geodesic.c ElViSCUtils.c -o ElViSCUtils -lm
 ifeq (swig,$(findstring swig,$(sysswig)))  
 	swig -python ElViSCUtils.i
-	$(CC) $(CCFLAGS) -c geodesic.c ElViSCUtils.c $(LIBFLAGS) ElViSCUtils_wrap.c -I/usr/include/python2.7/ -I/usr/lib64/python2.7/config -fPIC
-	$(CC) $(CCFLAGS) -shared ElViSCUtils.o geodesic.o ElViSCUtils_wrap.o -o _ElViSCUtilsmodule.so $(LIBFLAGS)
+	$(CC) $(CCFLAGS) -c geodesic.c ElViSCUtils.c $(LIBFLAGS) ElViSCUtils_wrap.c $(PYINCLUDE) -fPIC
+	$(CC) $(CCFLAGS) -shared ElViSCUtils.o geodesic.o ElViSCUtils_wrap.o -o _ElViSCUtils.so $(LIBFLAGS)
 	@mkdir -p log
 endif
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #/**********************************************************************************
 #*    Copyright (C) by Ran Novitsky Nof                                            *
@@ -21,7 +21,7 @@
 
 # By Ran Novitsky Nof @ BSL, 2014
 # ran.nof@gmail.com
-
+# Update for Python3 and QT5 by R.N.N @ GSI, 2019
 
 import matplotlib as mpl
 import datetime

@@ -30,6 +30,14 @@ C external software (included as c files):
 #### INSTALL:
 **_For Python3 and QT5_**
 
+  Consider using a virtual environment such as venv:
+  ```
+  python3.7 -m venv venv
+  ```
+  and start it:
+  ```
+  . venv/bin/activate
+  ```
   Install dependancies using pip for Python3:
   ```
   pip3 install -r requirements.txt
@@ -38,6 +46,9 @@ C external software (included as c files):
   ```
   make
   ```
+  In case of using virtual environment or a different python than the system environment (i.e. system is python3.5 or lower),
+  You might need to edit Makefile python-config line to e.g. python3.7-config.
+  
 **_For Python2 and QT4_**
 
   Install dependancies using pip for Python3:

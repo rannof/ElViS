@@ -67,11 +67,19 @@ GMPEAKtopic='/topic/eew.alg.epic.gmpeak.data' # peak parameters AMQ topic
 TRIGGERtopic='/topic/eew.alg.epic.trigger.data' # trigger and trigger parameters AMQ topic
 ALARMStopic='/topic/eew.alg.epic.data' # E2 alarms AMQ topic
 DMtopic='/topic/eew.sys.dm.data' # DM event AMQ topic
+<<<<<<< HEAD
 EDATAtopic='/topic/eew.alg.epic.event.data' # event raw data topic
 STATIONS_FILE = 'stations.cfg' # file with stations ([net] [sta] [lat] [lon])
 FAULTS_FILE = 'faults.txt'
 HomeLat=40.226504 # latitude of "home" location
 HomeLon=29.075154 # longitude of "home" location
+=======
+EDATAtopic='/topic/eew.alg.elarms.event.data' # event raw data topic
+STATIONS_FILE = '/home/sysop/EEWS/run/bin/stations.cfg' # file with stations ([net] [sta] [lat] [lon])
+FAULTS_FILE = 'faults.txt' # file with faults. a list of nodes (lon lat) each line and END for end of line
+HomeLat=31.7722064 # latitude of "home" location
+HomeLon=35.1958522 # longitude of "home" location
+>>>>>>> 6fac2b0f5da1635d0eefbf956d21d47772d7493a
 HomeSize=6 # size of "home" marker
 HomeLabel='Home' # name of "Home"
 HomeColor='red' # color of "home" marker
@@ -214,7 +222,11 @@ class AppForm(QMainWindow):
     self.stations = []
     self.faults = []
     self.load_stations(STATIONS_FILE) # load stations
+<<<<<<< HEAD
     self.load_faults(FAULTS_FILE) # load faults
+=======
+    self.load_faults(FAULTS_FILE) # load fault lines
+>>>>>>> 6fac2b0f5da1635d0eefbf956d21d47772d7493a
     self.set_home(lat=HomeLat,lon=HomeLon,label=HomeLabel,markersize=HomeSize,color=HomeColor,marker=HomeMarker) # set "home" location
     self.homeDialog = homeDialog(self.home._y[0],self.home._x[0],Label=HomeLabel,Markersize=HomeSize,Color=HomeColor,Marker=HomeMarker) # init and update home dialog
     self.eventDialog = eventDialog() # init an event dialog
@@ -805,6 +817,7 @@ class AppForm(QMainWindow):
     self.draw(True) # redraw the map
 
   def load_faults(self, fileurl=FAULTS_FILE):
+<<<<<<< HEAD
     '''load fault lines from file.
        file should be in the format of:
        ----------
@@ -817,6 +830,8 @@ class AppForm(QMainWindow):
        to draw a line with all points of lon/lat
        multiple lines can be listed.
     '''
+=======
+>>>>>>> 6fac2b0f5da1635d0eefbf956d21d47772d7493a
     try:
       faults = []
       with open(fileurl,'r') as f:
@@ -830,8 +845,13 @@ class AppForm(QMainWindow):
             a = np.append(a,np.array(line).astype(np.float))
       self.faults = [self.ax.plot(f[::2],f[1::2],color='r',lw=0.5,zorder=10) for f in faults]
     except Exception as msg:
+<<<<<<< HEAD
        print(msg)
     
+=======
+      print msg
+
+>>>>>>> 6fac2b0f5da1635d0eefbf956d21d47772d7493a
   def set_home(self,lat=HomeLat,lon=HomeLon,label=HomeLabel,markersize=HomeSize,color=HomeColor,marker=HomeMarker):
     'plot the "home" location on map'
     if not 'home' in self.__dict__: # if this is the first time we set the home location
@@ -861,7 +881,11 @@ class AppForm(QMainWindow):
     self.redrawbgmap() # redraw the map (updating background maps)
 
   def zoomIsrael(self):
+<<<<<<< HEAD
     'zoom to Turkey'
+=======
+    'zoom to Trukey'
+>>>>>>> 6fac2b0f5da1635d0eefbf956d21d47772d7493a
     self.osm.relimcorrected(28.1,30.1,39.62,41.413) # adjust map limits
     self.redrawbgmap() # redraw the map (updating background maps)
 
@@ -934,7 +958,11 @@ class AppForm(QMainWindow):
             icon='viewmagfit',tip="Zoom to area")
     # Israel
     ZoomIsrael_action = self.create_action("Zoom To &Turkey",
+<<<<<<< HEAD
             shortcut="Shift+Ctrl+I", slot=self.zoomIsrael,
+=======
+            shortcut="Shift+Ctrl+T", slot=self.zoomIsrael,
+>>>>>>> 6fac2b0f5da1635d0eefbf956d21d47772d7493a
             icon='viewmag1',tip="Zoom to Turkey")
     # go to "home" location
     gohome_action = self.create_action("Zoom To &Home",

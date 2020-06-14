@@ -70,8 +70,8 @@ DMtopic='/topic/eew.sys.dm.data' # DM event AMQ topic
 EDATAtopic='/topic/eew.alg.epic.event.data' # event raw data topic
 STATIONS_FILE = 'stations.cfg' # file with stations ([net] [sta] [lat] [lon])
 FAULTS_FILE = 'faults.txt'
-HomeLat=31.7722064 # latitude of "home" location
-HomeLon=35.1958522 # longitude of "home" location
+HomeLat=40.226504 # latitude of "home" location
+HomeLon=29.075154 # longitude of "home" location
 HomeSize=6 # size of "home" marker
 HomeLabel='Home' # name of "Home"
 HomeColor='red' # color of "home" marker
@@ -861,8 +861,8 @@ class AppForm(QMainWindow):
     self.redrawbgmap() # redraw the map (updating background maps)
 
   def zoomIsrael(self):
-    'zoom to israel'
-    self.osm.relimcorrected(32.5,37.5,29,34) # adjust map limits
+    'zoom to Turkey'
+    self.osm.relimcorrected(28.1,30.1,39.62,41.413) # adjust map limits
     self.redrawbgmap() # redraw the map (updating background maps)
 
   def ZoomTo(self):
@@ -933,9 +933,9 @@ class AppForm(QMainWindow):
             shortcut="Shift+Ctrl+Z", slot=self.ZoomTo,
             icon='viewmagfit',tip="Zoom to area")
     # Israel
-    ZoomIsrael_action = self.create_action("Zoom To &Israel",
+    ZoomIsrael_action = self.create_action("Zoom To &Turkey",
             shortcut="Shift+Ctrl+I", slot=self.zoomIsrael,
-            icon='viewmag1',tip="Zoom to Israel")
+            icon='viewmag1',tip="Zoom to Turkey")
     # go to "home" location
     gohome_action = self.create_action("Zoom To &Home",
             shortcut="Shift+Ctrl+V", slot=self.goHomeLocation,

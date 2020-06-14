@@ -32,6 +32,7 @@ C external software (included as c files):
 
   Consider using a virtual environment such as venv:
   ```
+  sudo apt-get install build-essential libssl-dev libffi-dev python-dev python3-dev python3.7-dev
   sudo apt-get install python3.7-venv
   python3.7 -m venv venv
   ```

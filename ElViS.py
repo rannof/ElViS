@@ -499,7 +499,7 @@ class AppForm(QMainWindow):
     '''
     if len(self.activeWarnings)==0: return # don't waste time if no active events are available.
     redraw = False # only update figure if needed
-    for Eid,params in self.activeWarnings.items(): # for each active alert running get the parameters
+    for Eid,params in list(self.activeWarnings.items()): # for each active alert running get the parameters
       ot = params['ot'] # origin time
       lat0 = params['lat'] # latitude
       lon0 = params['lon'] # longitude

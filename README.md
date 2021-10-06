@@ -32,13 +32,18 @@ C external software (included as c files):
 
   Consider using a virtual environment such as venv:
   ```
-  sudo apt-get install build-essential libssl-dev libffi-dev python-dev python3-dev python3.7-dev
-  sudo apt-get install python3.7-venv
-  python3.7 -m venv venv
+  sudo apt-get install build-essential libssl-dev libffi-dev python-dev python3-dev
+  sudo apt-get install python3-venv
+  python3 -m venv venv
   ```
   and start it:
   ```
   . venv/bin/activate
+  ```
+  OR START FROM HERE:
+  Install QT5 and swig
+  ```
+  sudo apt install swig qt5-default
   ```
   Install dependancies using pip for Python3:
   ```

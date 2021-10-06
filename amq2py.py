@@ -215,8 +215,17 @@ class AMQListener(object):
 
   def connectToActiveMQ(self):
     if self._verbose: self.log.debug('Trying to Connect to AMQ server')
-    self.conn.start()
-    if not self.conn.is_connected(): self.conn.connect(self.usr,self.passwd,wait=True)
+    try:
+        self.conn.connect(self.usr, self.passwd, wait=True)
+    except stomp.exception.ConnectFailedException:
+        self.log.warning(f'Connection Failed to TRUAA server')
+        return False
+    except ConnectionRefusedError:
+        self.log.warning(f'Connection refused to TRUAA server')
+        return False
+    if not self.conn.is_connected():
+        return False
+    return True
 
   def on_connecting(self,host_and_port):
     host,port = self.conn.transport.current_host_and_port
@@ -375,8 +384,17 @@ class AMQWriter(object):
   def connectToActiveMQ(self):
     self.conn = stomp.Connection(host_and_ports=self.host_and_ports)
     self.conn.set_listener(self.name, self)
-    self.conn.start()
-    self.conn.connect(self.usr,self.passwd)
+    try:
+        self.conn.connect(self.usr, self.passwd, wait=True)
+    except stomp.exception.ConnectFailedException:
+        self.log.warning(f'Connection Failed to TRUAA server')
+        return False
+    except ConnectionRefusedError:
+        self.log.warning(f'Connection refused to TRUAA server')
+        return False
+    if not self.conn.is_connected():
+        return False
+    return True
 
   def disconnectToActiveMQ(self):
     self.conn.disconnect()

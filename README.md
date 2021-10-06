@@ -40,7 +40,7 @@ C external software (included as c files):
   ```
   . venv/bin/activate
   ```
-  OR START FROM HERE:
+  OR START FROM HERE:  
   Install QT5 and swig
   ```
   sudo apt install swig qt5-default

@@ -21,7 +21,7 @@ CC = gcc
 CCFLAGS = -O2 -Wall
 LIBFLAGS = -lm
 sysswig := $(shell which swig)
-PYINCLUDE := $(shell python3.7-config --includes)
+PYINCLUDE := $(shell python3 -config --includes)
 
 all: ElViSCUtils
   

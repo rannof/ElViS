@@ -234,10 +234,13 @@ class AMQListener(object):
   def on_disconnected(self):
     if self._verbose: self.log.debug(' Connection lost...')
 
-  def on_error(self, headers, message):
+  def on_error(self, frame):
+    message = frame.body
     if self._verbose: self.log.error('received an error {message}').format(message=message)
 
-  def on_message(self, headers, message):
+  def on_message(self, frame):
+    headers = frame.headers
+    message = frame.body
     self.MESSAGES += [(headers,message)]
     if len(self.MESSAGES)>self.maxmessages: self.MESSAGES.pop(0)
     self._processMessages(message)

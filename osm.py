@@ -71,7 +71,7 @@ class OSM(object):
             tilearchive = ''  # make sure tile archive directory exists
         self.tilearchive = tilearchive
         # Add copyright text
-        self.ax.text(0.99, 0.01, 'Leaflet | Tiles ' + u'\N{COPYRIGHT SIGN}' + 'Esri', color='#555555', ha='right', transform=ax.transAxes, name='Helvetica', fontsize=8, zorder=999)
+        self.ax.text(0.99, 0.01, 'Leaflet | Tiles ' + u'\N{COPYRIGHT SIGN}' + 'Esri', color='#555555', ha='right', transform=ax.transAxes, fontsize=8, zorder=999)
    
     def mplconnect(self):
         self.canvas.mpl_connect('draw_event', self.draw)

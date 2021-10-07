@@ -827,7 +827,7 @@ class AppForm(QMainWindow):
             if len(a): faults.append(a)
             a = np.array([])
           else:
-            a = np.append(a,np.array(line).astype(np.float))
+            a = np.append(a,np.array(line).astype(float))
       self.faults = [self.ax.plot(f[::2],f[1::2],color='r',lw=0.5,zorder=10) for f in faults]
     except Exception as msg:
        print(msg)

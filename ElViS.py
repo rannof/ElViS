@@ -405,7 +405,11 @@ class AppForm(QMainWindow):
     if message.type=='T': # trigger message
       self.trigMsgSignal.emit(str(message),datetime.datetime.utcnow().strftime('[%T.%f] ')) # send a trigger message
       stationID = AMQ.ID(message.packets)[0][:-7] # get station ID
-      station = [i for i in self.stations if stationID in i.get_label()][0] # find first station in self.stations (matplotlib lines) with a label similar to stationID
+      try:
+        station = [i for i in self.stations if stationID in i.get_label()][0] # find first station in self.stations (matplotlib lines) with a label similar to stationID
+      except IndexError:
+        print(stationID,is missing from stations list)
+        return
       self.trigstation(station) # Mark station as triggered
       self.trigedlist[station]=ts # add time stamp to triggered station list
       self.drawSignal.emit(True) # redraw figure if idle

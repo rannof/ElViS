@@ -408,7 +408,7 @@ class AppForm(QMainWindow):
       try:
         station = [i for i in self.stations if stationID in i.get_label()][0] # find first station in self.stations (matplotlib lines) with a label similar to stationID
       except IndexError:
-        print(stationID,is missing from stations list)
+        print(stationID, 'is missing from stations list')
         return
       self.trigstation(station) # Mark station as triggered
       self.trigedlist[station]=ts # add time stamp to triggered station list
@@ -635,7 +635,8 @@ class AppForm(QMainWindow):
     '''
     self.statusBar().showMessage('hold, redrawing ...') # let user know to wait on drawing. it might take some time
     QApplication.processEvents() # make sure user see the message
-    self.ax.images=[] # remove images from map
+    if 'images' in self.ax.__dict__:
+      self.ax.images=[] # remove images from map
     self.ax.apply_aspect() # make sure xlim and ylim are updated to screen size. this is because we use equal aspect and datalim. see matplotlib details on axes set_aspect function
     x0,x1 = self.ax.get_xlim() # get requested limits of x axis
     y0,y1 = self.ax.get_ylim() # get requested limits of y axis

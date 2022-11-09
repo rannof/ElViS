@@ -169,6 +169,12 @@ class algXML(object):
     self.msgorigsys=em.attributes['orig_sys'].value
     self.msgtime=datetime.datetime.strptime(em.attributes['timestamp'].value,'%Y-%m-%dT%H:%M:%S.%fZ')
     self.msgtype=em.attributes['message_type'].value
+    self.category=em.attributes['category'].value
+    self.instance=em.attributes['instance'].value
+    if len(xmldoc.getElementsByTagName('num_stations')):
+      self.num_stations=xmldoc.getElementsByTagName('num_stations')[0].firstChild.data
+    else:
+      self.num_stations=0
     self.lat=float(xmldoc.getElementsByTagName('lat')[0].firstChild.data)
     self.lon=float(xmldoc.getElementsByTagName('lon')[0].firstChild.data)
     self.depth=float(xmldoc.getElementsByTagName('depth')[0].firstChild.data)

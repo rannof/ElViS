@@ -1,0 +1,15 @@
+cycler
+docopt
+httplib2
+kiwisolver
+matplotlib
+numpy
+Pillow
+pyparsing
+PyQt5
+PyQt5-sip
+python-dateutil
+sip
+six
+stomp.py
+requests

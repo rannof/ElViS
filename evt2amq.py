@@ -120,20 +120,20 @@ def getmsg(category='test', hostname=None, timestamp=None, ver=0, EID='TEST', ma
  
 # writer class for connecting to activeMQ
 class AMQWriter(object):
-  def __init__(self,topic='/topic/eew.sys.dm.data',usr='decimod',passwd='decimod',name='writer',id=1,verbose=False,loglevel='CRITICAL',auto_decode=False,host_and_ports=[('localhost',61613)],test=False):
+  def __init__(self,topic='/topic/eew.sys.dm.data',user='decimod',password='decimod',name='writer',id=1,v=False,log_level='CRITICAL',auto_decode=False,host='localhost',port=61613,test=False):
+    host_and_ports = host_and_ports=[(host,port)]
     self.topic=topic
     self.name=name
-    self.usr=usr
-    self.passwd=passwd
+    self.usr=user
+    self.passwd=password
     self.id=id
     self.test = test
-    self._verbose=verbose
+    self._verbose=v
     self.host_and_ports = host_and_ports
     self.log = logging.getLogger('AMQ_{name}'.format(name=name))
-    self.log.setLevel(loglevel)
+    self.log.setLevel(log_level)
     self.conn = stomp.Connection(host_and_ports=host_and_ports,auto_decode=auto_decode)
     self.conn.set_listener(self.name, self)
-    self.conn.start()
 
   def on_disconnected(self):
     if self._verbose: self.log.debug('Disconnected.')

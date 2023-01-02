@@ -83,7 +83,7 @@ class maildaemon(object):
 
 def test():
     import pandas as pd
-    alerts = pd.read_csv('alerts.csv')
+    alerts = pd.DataFrame([], columns=['Eid', 'version', 'lat', 'lon', 'depth', 'mag', 'orig_time', 'likelihood', 'num_stations', 'instance', 'category', 'message_type', 'msgtime'])
     alerts.loc[0] = [145, 0, 31.9853, 35.2397, 8.0000, 2.7360, "2019-06-29T05:43:18.758Z", 0.9256, 5, "dm@sandbox", "test", "new", "2019-06-29T05:43:30.159Z"]
     alert = alerts.loc[0]
     md = maildaemon()
